@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get)",
+      "Bash(flutter analyze)",
+      "Bash(flutter analyze lib/features/auth/presentation/pages/auth_page.dart)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}
