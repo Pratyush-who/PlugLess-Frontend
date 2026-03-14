@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/splash/presentation/pages/splash_page.dart';
-import '../features/auth/presentation/pages/auth_page.dart';
+import '../features/auth/presentation/pages/login_page.dart';
+import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import 'app_routes.dart';
@@ -22,9 +23,14 @@ class AppRouter {
                 _fadePage(state, const SplashPage()),
           ),
           GoRoute(
-            path: AppRoutes.auth,
+            path: AppRoutes.login,
             pageBuilder: (_, state) =>
-                _fadePage(state, const AuthPage()),
+                _fadePage(state, const LoginPage()),
+          ),
+          GoRoute(
+            path: AppRoutes.signup,
+            pageBuilder: (_, state) =>
+                _fadePage(state, const SignupPage()),
           ),
           GoRoute(
             path: AppRoutes.onboarding,
@@ -43,18 +49,18 @@ class AppRouter {
     BuildContext context,
     GoRouterState state,
   ) async {
-    // Splash handles its own redirect; skip guarding while on splash
     if (state.matchedLocation == AppRoutes.splash) return null;
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final isLoggedIn = token != null;
 
-    final isOnAuth = state.matchedLocation == AppRoutes.auth;
-    final isOnOnboarding = state.matchedLocation == AppRoutes.onboarding;
+    final loc = state.matchedLocation;
+    final isOnAuth = loc == AppRoutes.login || loc == AppRoutes.signup;
+    final isOnOnboarding = loc == AppRoutes.onboarding;
 
     if (!isLoggedIn && !isOnAuth && !isOnOnboarding) {
-      return AppRoutes.auth;
+      return AppRoutes.login;
     }
     if (isLoggedIn && isOnAuth) {
       return AppRoutes.home;

@@ -11,7 +11,7 @@ class ProfilePage extends StatelessWidget {
   Future<void> _signOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-    if (context.mounted) context.go(AppRoutes.auth);
+    if (context.mounted) context.go(AppRoutes.login);
   }
 
   @override

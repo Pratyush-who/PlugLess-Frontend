@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../router/app_routes.dart';
+import '../../../auth/presentation/widgets/auth_dot_grid.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -15,181 +14,176 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoOpacity;
-  late final Animation<double> _textOpacity;
-  late final Animation<Offset> _textSlide;
+  late final AnimationController _ctrl;
+
+  late final Animation<double> _plugOpacity;
+  late final Animation<Offset> _plugSlide;
+  late final Animation<double> _lessOpacity;
+  late final Animation<Offset> _lessSlide;
+  late final Animation<double> _tagOpacity;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1600),
     );
 
-    _logoScale = Tween<double>(begin: 0.6, end: 1.0).animate(
+    _plugOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
       ),
     );
-
-    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
-      ),
-    );
-
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.5, 0.9, curve: Curves.easeIn),
-      ),
-    );
-
-    _textSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+    _plugSlide = Tween<Offset>(
+      begin: const Offset(-0.08, 0),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.5, 0.9, curve: Curves.easeOut),
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
       ),
     );
 
-    _controller.forward();
+    _lessOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
+      ),
+    );
+    _lessSlide = Tween<Offset>(
+      begin: const Offset(-0.08, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
+      ),
+    );
+
+    _tagOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.65, 1.0, curve: Curves.easeIn),
+      ),
+    );
+
+    _ctrl.forward();
     _navigate();
   }
 
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2800));
     if (!mounted) return;
-
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-
     if (!mounted) return;
-    if (token != null) {
-      context.go(AppRoutes.home);
-    } else {
-      context.go(AppRoutes.auth);
-    }
+    context.go(token != null ? AppRoutes.home : AppRoutes.login);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.channelBg,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (_, __) => Opacity(
-                opacity: _logoOpacity.value,
-                child: Transform.scale(
-                  scale: _logoScale.value,
-                  child: _PluglessLogo(),
-                ),
-              ),
+      backgroundColor: const Color(0xFF0A0A0A),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AuthDotGrid()),
+
+          Center(
+            child: AnimatedBuilder(
+              animation: _ctrl,
+              builder: (_, __) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── PLUG (dim) ──
+                    Opacity(
+                      opacity: _plugOpacity.value,
+                      child: SlideTransition(
+                        position: _plugSlide,
+                        child: Text(
+                          'PLUG',
+                          style: GoogleFonts.bungee(
+                            fontSize: 72,
+                            color: const Color(0xFF282828),
+                            letterSpacing: 2,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // ── LESS (bright) ──
+                    Opacity(
+                      opacity: _lessOpacity.value,
+                      child: SlideTransition(
+                        position: _lessSlide,
+                        child: Text(
+                          'LESS',
+                          style: GoogleFonts.bungee(
+                            fontSize: 72,
+                            color: const Color(0xFFF2F2F2),
+                            letterSpacing: 2,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Tagline ──
+                    Opacity(
+                      opacity: _tagOpacity.value,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4.0),
+                        child: Text(
+                          'Meet Your People.',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 13,
+                            color: const Color.fromARGB(255, 199, 199, 199),
+                            letterSpacing: 1.5,
+                            
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 28),
-            // App name + tagline
-            AnimatedBuilder(
-              animation: _controller,
+          ),
+
+          // ── Version ──
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: AnimatedBuilder(
+              animation: _tagOpacity,
               builder: (_, __) => Opacity(
-                opacity: _textOpacity.value,
-                child: SlideTransition(
-                  position: _textSlide,
-                  child: Column(
-                    children: [
-                      Text(
-                        AppStrings.appName,
-                        style: GoogleFonts.inter(
-                          fontSize: 38,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        AppStrings.tagline,
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textMuted,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+                opacity: _tagOpacity.value,
+                child: Text(
+                  'v1.0.0',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 9,
+                    color: const Color(0xFF222222),
+                    letterSpacing: 2,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 40),
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) => Opacity(
-            opacity: _textOpacity.value,
-            child: Text(
-              'v1.0.0',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                color: AppColors.textMuted,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PluglessLogo extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 96,
-      height: 96,
-      decoration: BoxDecoration(
-        color: AppColors.blurple,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.blurple.withValues(alpha: 0.4),
-            blurRadius: 32,
-            spreadRadius: 4,
-            offset: const Offset(0, 8),
           ),
         ],
-      ),
-      child: Center(
-        child: Text(
-          'P',
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontSize: 52,
-            fontWeight: FontWeight.w800,
-            height: 1,
-          ),
-        ),
       ),
     );
   }
