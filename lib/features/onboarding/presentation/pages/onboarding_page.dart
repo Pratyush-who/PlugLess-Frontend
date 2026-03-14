@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -72,7 +71,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             const SizedBox(height: 16),
             _SheetOption(
               icon: Icons.photo_library_rounded,
-              label: AppStrings.choosePhoto,
+              label: 'Choose Photo',
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _pickImage(ImageSource.gallery);
@@ -80,7 +79,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             ),
             _SheetOption(
               icon: Icons.camera_alt_rounded,
-              label: AppStrings.takePhoto,
+              label: 'Take Photo',
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _pickImage(ImageSource.camera);
@@ -89,7 +88,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             if (hasAvatar)
               _SheetOption(
                 icon: Icons.delete_rounded,
-                label: AppStrings.removePhoto,
+                label: 'Remove Photo',
                 color: AppColors.error,
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -143,7 +142,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               children: [
                 const SizedBox(height: 48),
                 Text(
-                  AppStrings.completeProfile,
+                  'Complete Your Profile',
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -153,7 +152,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppStrings.completeProfileSub,
+                  'Tell us a bit about yourself to get started.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.textMuted,
@@ -168,7 +167,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 ),
                 const SizedBox(height: 32),
                 AppTextField(
-                  label: AppStrings.username,
+                  label: 'Username',
                   hint: 'e.g. plugmaster',
                   controller: _usernameCtrl,
                   validator: Validators.username,
@@ -178,18 +177,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 ),
                 const SizedBox(height: 20),
                 AppTextField(
-                  label: AppStrings.displayName,
+                  label: 'Display Name',
                   hint: 'How others see you',
                   controller: _displayNameCtrl,
-                  validator: (v) =>
-                      Validators.required(v, AppStrings.displayName),
+                  validator: (v) => Validators.required(v, 'Display Name'),
                   textInputAction: TextInputAction.next,
                   prefixIcon: Icons.badge_rounded,
                   enabled: !isLoading,
                 ),
                 const SizedBox(height: 20),
                 AppTextField(
-                  label: AppStrings.bio,
+                  label: 'Bio',
                   hint: 'Tell us about yourself...',
                   controller: _bioCtrl,
                   maxLines: 3,
@@ -198,13 +196,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 ),
                 const SizedBox(height: 32),
                 AppButton(
-                  label: AppStrings.letsGo,
+                  label: "Let's Go",
                   onPressed: isLoading ? null : _submit,
                   isLoading: isLoading,
                 ),
                 const SizedBox(height: 12),
                 AppButton(
-                  label: AppStrings.skipForNow,
+                  label: 'Skip for now',
                   onPressed: isLoading
                       ? null
                       : () => ref.read(onboardingProvider.notifier).skip(),

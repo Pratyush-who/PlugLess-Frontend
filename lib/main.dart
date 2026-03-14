@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/network/api_client.dart';
-import 'core/theme/app_theme.dart';
+import 'core/constants/app_colors.dart';
 import 'router/app_router.dart';
 
 Future<void> main() async {
@@ -37,7 +37,17 @@ class PluglessApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'PlugLess',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: ThemeData.dark(useMaterial3: true).copyWith(
+        scaffoldBackgroundColor: AppColors.appBackground,
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.appPrimary,
+          onPrimary: AppColors.appOnPrimary,
+          surface: AppColors.appSurface,
+          onSurface: AppColors.textPrimary,
+          error: AppColors.error,
+          onError: Colors.white,
+        ),
+      ),
       routerConfig: AppRouter.router,
     );
   }

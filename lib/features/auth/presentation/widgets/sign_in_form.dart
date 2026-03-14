@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -47,7 +46,7 @@ class _SignInFormState extends ConsumerState<SignInForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppTextField(
-            label: AppStrings.email,
+            label: 'Email',
             hint: 'you@example.com',
             controller: _emailCtrl,
             validator: Validators.email,
@@ -59,7 +58,7 @@ class _SignInFormState extends ConsumerState<SignInForm> {
           ),
           const SizedBox(height: 20),
           AppTextField(
-            label: AppStrings.password,
+            label: 'Password',
             hint: '••••••••',
             controller: _passwordCtrl,
             validator: Validators.password,
@@ -74,7 +73,7 @@ class _SignInFormState extends ConsumerState<SignInForm> {
             child: TextButton(
               onPressed: isLoading ? null : () {},
               child: Text(
-                AppStrings.forgotPassword,
+                'Forgot your password?',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: AppColors.textLink,
@@ -84,7 +83,7 @@ class _SignInFormState extends ConsumerState<SignInForm> {
           ),
           const SizedBox(height: 8),
           AppButton(
-            label: AppStrings.signIn,
+            label: 'Sign In',
             onPressed: isLoading ? null : _submit,
             isLoading: isLoading,
           ),

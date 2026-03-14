@@ -3,6 +3,15 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  // App theme base (auth + shell)
+  static const Color appBackground = Color(0xFF0A0A0A);
+  static const Color appSurface = Color(0xFF141414);
+  static const Color appBorder = Color(0xFF2A2A2A);
+  static const Color appInputFill = Color(0xFF1A1A1A);
+  static const Color appPrimary = Color(0xFFE8E8E8);
+  static const Color appOnPrimary = Color(0xFF0A0A0A);
+  static const Color appFocusBorder = Color(0xFF888888);
+
   // Backgrounds
   static const Color background = Color(0xFF313338);
   static const Color surface = Color(0xFF2B2D31);
