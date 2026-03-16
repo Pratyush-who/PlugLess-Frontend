@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/plugless_logo.dart';
 import '../../../../router/app_routes.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_button.dart';
@@ -104,19 +105,30 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+
+                        // ── Hero: Logo only ──
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: constraints.maxHeight * 0.10),
+                            const Center(child: PluglessLogo(size: 64)),
+                            const SizedBox(height: 28),
+                          ],
+                        ),
+
+                        // ── Form section: greeting + fields ──
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: constraints.maxHeight * 0.21),
                             SizedBox(
                               width: double.infinity,
-                              height: 74,
+                              height: 60,
                               child: ClipRect(
                                 child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 520),
+                                  duration: const Duration(milliseconds: 450),
                                   switchInCurve: Curves.easeOutCubic,
                                   switchOutCurve: Curves.easeInCubic,
                                   layoutBuilder: (currentChild, previous) {
@@ -131,7 +143,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                   transitionBuilder: (child, animation) {
                                     final isIncoming = child.key ==
                                         ValueKey(_greetings[_greetingIndex]);
-
                                     final slideAnimation = Tween<Offset>(
                                       begin: isIncoming
                                           ? const Offset(0, 1)
@@ -139,22 +150,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                       end: isIncoming
                                           ? Offset.zero
                                           : const Offset(0, -1),
-                                    ).animate(
-                                      CurvedAnimation(
-                                        parent: isIncoming
-                                            ? animation
-                                            : ReverseAnimation(animation),
-                                        curve: Curves.easeInOutCubic,
-                                      ),
-                                    );
-
+                                    ).animate(CurvedAnimation(
+                                      parent: isIncoming
+                                          ? animation
+                                          : ReverseAnimation(animation),
+                                      curve: Curves.easeInOutCubic,
+                                    ));
                                     final fadeAnimation = CurvedAnimation(
                                       parent: isIncoming
                                           ? animation
                                           : ReverseAnimation(animation),
                                       curve: Curves.easeInOut,
                                     );
-
                                     return FadeTransition(
                                       opacity: fadeAnimation,
                                       child: SlideTransition(
@@ -168,8 +175,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                     key: ValueKey(_greetings[_greetingIndex]),
                                     textAlign: TextAlign.left,
                                     style: GoogleFonts.bebasNeue(
-                                      fontSize: 68,
-                                      color: const Color(0xFFF2F2F2),
+                                      fontSize: 52,
+                                      color: const Color(0xFFBBBBBB),
                                       letterSpacing: 1.5,
                                       height: 1,
                                     ),
@@ -178,29 +185,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                               ),
                             ),
                             Text(
-                              'LOW ON BATTERY ?',
-                              style: GoogleFonts.bebasNeue(
-                                fontSize: 36,
-                                color: const Color(0xFF979797),
-                                letterSpacing: 1.5,
-                                height: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'meet your people.',
+                              'Meet your people.',
                               style: GoogleFonts.spaceMono(
                                 fontSize: 12,
-                                color: const Color(0xFFAAAAAA),
+                                color: const Color(0xFF888888),
                                 letterSpacing: 0.5,
                               ),
                             ),
-                          ],
-                        ),
-
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                            const SizedBox(height: 28),
                             Form(
                               key: _formKey,
                               child: Column(
@@ -242,6 +234,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           ],
                         ),
 
+                        // ── Footer ──
                         Padding(
                           padding: const EdgeInsets.only(top: 20, bottom: 36),
                           child: Center(
@@ -250,13 +243,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                               children: [
                                 Text('ALREADY HERE?  ',
                                     style: GoogleFonts.spaceMono(
-                                        fontSize: 12,
-                                        color: const Color(0xFF636363))),
+                                        fontSize: 11,
+                                        color: const Color(0xFF666666))),
                                 GestureDetector(
                                   onTap: () => context.go(AppRoutes.login),
                                   child: Text('SIGN IN →',
                                       style: GoogleFonts.spaceMono(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: const Color(0xFFCCCCCC))),
                                 ),
                               ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/plugless_logo.dart';
 import '../../../../router/app_routes.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_button.dart';
@@ -73,46 +74,51 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+
+                        // ── Hero: Logo centered ──
                         Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            SizedBox(height: constraints.maxHeight * 0.22),
+                            SizedBox(height: constraints.maxHeight * 0.10),
+                            const Center(child: PluglessLogo(size: 64)),
+                            const SizedBox(height: 12),
                             Text(
-                              'MISSED US?',
-                              style: GoogleFonts.bebasNeue(
-                                fontSize: 68,
-                                color: const Color(0xFFF2F2F2),
-                                letterSpacing: 1.5,
-                                height: 1,
-                              ),
-                            ),
-                            Text(
-                              'OR THE COMMUNITY?',
-                              style: GoogleFonts.bebasNeue(
-                                fontSize: 36,
-                                color: const Color(0xFF979797),
-                                letterSpacing: 1.5,
-                                height: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'you were gone for a while.',
+                              'Missed the community?.',
                               style: GoogleFonts.spaceMono(
-                                fontSize: 12,
-                                color: const Color(0xFFAAAAAA),
-                                letterSpacing: 0.5,
+                                fontSize: 11,
+                                color: const Color(0xFF888888),
+                                letterSpacing: 1.0,
                               ),
                             ),
                           ],
                         ),
 
+                        // ── Form section ──
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              'WELCOME BACK',
+                              style: GoogleFonts.bebasNeue(
+                                fontSize: 53,
+                                color: const Color(0xFFBBBBBB),
+                                letterSpacing: 2,
+                                height: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'You were gone for a while.',
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 12,
+                                color: const Color(0xFF777777),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
                             Form(
                               key: _formKey,
                               child: Column(
@@ -154,7 +160,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ],
                         ),
 
-                        // ── Bottom link ──
+                        // ── Footer ──
                         Padding(
                           padding: const EdgeInsets.only(top: 20, bottom: 36),
                           child: Center(
@@ -163,13 +169,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               children: [
                                 Text('NEW HERE?  ',
                                     style: GoogleFonts.spaceMono(
-                                        fontSize: 12,
-                                        color: const Color(0xFF636363))),
+                                        fontSize: 11,
+                                        color: const Color(0xFF666666))),
                                 GestureDetector(
                                   onTap: () => context.go(AppRoutes.signup),
                                   child: Text('MAKE AN ACCOUNT →',
                                       style: GoogleFonts.spaceMono(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: const Color(0xFFCCCCCC))),
                                 ),
                               ],

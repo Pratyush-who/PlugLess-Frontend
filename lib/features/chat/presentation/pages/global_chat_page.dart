@@ -8,6 +8,7 @@ import 'dart:convert';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/plugless_logo.dart';
 
 class GlobalChatPage extends StatefulWidget {
   const GlobalChatPage({super.key});
@@ -260,22 +261,27 @@ class _GlobalChatPageState extends State<GlobalChatPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
+        titleSpacing: 16,
         title: Row(
           children: [
-            const Icon(Icons.tag_rounded, color: AppColors.textMuted, size: 20),
-            const SizedBox(width: 6),
+            const PluglessLogo(size: 14),
+            const SizedBox(width: 12),
+            Container(width: 1, height: 28, color: const Color(0xFF3A3A3A)),
+            const SizedBox(width: 12),
+            const Icon(Icons.tag_rounded, color: AppColors.textMuted, size: 18),
+            const SizedBox(width: 4),
             Text(
               'general',
               style: GoogleFonts.inter(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              width: 8,
-              height: 8,
+              width: 7,
+              height: 7,
               decoration: BoxDecoration(
                 color: _isSocketConnected ? AppColors.online : AppColors.error,
                 shape: BoxShape.circle,

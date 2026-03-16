@@ -60,14 +60,14 @@ class _AuthTextFieldState extends State<AuthTextField> {
           enabled: widget.enabled,
           style: GoogleFonts.inter(
             color: AppColors.textPrimary, // 0xFFF2F3F5 — near white
-            fontSize: 17,
+            fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: GoogleFonts.spaceMono(
               color: AppColors.textMuted, // 0xFF80848E — visible hint
-              fontSize: 13,
+              fontSize: 11,
             ),
             filled: false,
             isDense: true,

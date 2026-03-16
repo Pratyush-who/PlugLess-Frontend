@@ -6,9 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/plugless_logo.dart';
 import '../../../../router/app_routes.dart';
+import '../../../auth/presentation/widgets/auth_button.dart';
+import '../../../auth/presentation/widgets/auth_dot_grid.dart';
+import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../providers/onboarding_provider.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -51,7 +53,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.modalBg,
+      backgroundColor: const Color(0xFF141414),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -64,7 +66,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: const Color(0xFF2A2A2A),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -119,8 +121,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       } else if (next is OnboardingFailure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.message),
-            backgroundColor: AppColors.error,
+            content: Text(
+              next.message,
+              style: GoogleFonts.spaceMono(
+                  color: const Color(0xFFCCCCCC), fontSize: 11),
+            ),
+            backgroundColor: const Color(0xFF141414),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
         );
       }
@@ -131,90 +140,115 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final avatarFile = state is OnboardingInitial ? state.avatarFile : null;
 
     return Scaffold(
-      backgroundColor: AppColors.channelBg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 48),
-                Text(
-                  'Complete Your Profile',
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
+      backgroundColor: const Color(0xFF0A0A0A),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AuthDotGrid()),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 48),
+                    const PluglessLogo(size: 28),
+                    const SizedBox(height: 28),
+
+                    // ── Heading ──
+                    Text(
+                      'SET UP YOUR\nPROFILE',
+                      style: GoogleFonts.bebasNeue(
+                        fontSize: 52,
+                        color: const Color(0xFFF2F2F2),
+                        letterSpacing: 1.5,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'tell us a bit about yourself.',
+                      style: GoogleFonts.spaceMono(
+                        fontSize: 12,
+                        color: const Color(0xFFAAAAAA),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 36),
+
+                    // ── Avatar ──
+                    Center(
+                      child: _AvatarPicker(
+                        avatarFile: avatarFile,
+                        onTap: _showImageOptions,
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // ── Fields ──
+                    AuthTextField(
+                      label: 'username',
+                      hint: 'plugmaster',
+                      controller: _usernameCtrl,
+                      validator: Validators.username,
+                      textInputAction: TextInputAction.next,
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: 28),
+                    AuthTextField(
+                      label: 'display name',
+                      hint: 'how others see you',
+                      controller: _displayNameCtrl,
+                      validator: (v) => Validators.required(v, 'Display Name'),
+                      textInputAction: TextInputAction.next,
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: 28),
+                    AuthTextField(
+                      label: 'bio',
+                      hint: 'tell us about yourself...',
+                      controller: _bioCtrl,
+                      textInputAction: TextInputAction.done,
+                      enabled: !isLoading,
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    AuthButton(
+                      label: "let's go",
+                      onPressed: isLoading ? null : _submit,
+                      isLoading: isLoading,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Skip ──
+                    Center(
+                      child: GestureDetector(
+                        onTap: isLoading
+                            ? null
+                            : () =>
+                                ref.read(onboardingProvider.notifier).skip(),
+                        child: Text(
+                          'SKIP FOR NOW',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 12,
+                            color: const Color(0xFF636363),
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 60),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tell us a bit about yourself to get started.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 36),
-                Center(
-                  child: _AvatarPicker(
-                    avatarFile: avatarFile,
-                    onTap: _showImageOptions,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                AppTextField(
-                  label: 'Username',
-                  hint: 'e.g. plugmaster',
-                  controller: _usernameCtrl,
-                  validator: Validators.username,
-                  textInputAction: TextInputAction.next,
-                  prefixIcon: Icons.alternate_email_rounded,
-                  enabled: !isLoading,
-                ),
-                const SizedBox(height: 20),
-                AppTextField(
-                  label: 'Display Name',
-                  hint: 'How others see you',
-                  controller: _displayNameCtrl,
-                  validator: (v) => Validators.required(v, 'Display Name'),
-                  textInputAction: TextInputAction.next,
-                  prefixIcon: Icons.badge_rounded,
-                  enabled: !isLoading,
-                ),
-                const SizedBox(height: 20),
-                AppTextField(
-                  label: 'Bio',
-                  hint: 'Tell us about yourself...',
-                  controller: _bioCtrl,
-                  maxLines: 3,
-                  textInputAction: TextInputAction.done,
-                  enabled: !isLoading,
-                ),
-                const SizedBox(height: 32),
-                AppButton(
-                  label: "Let's Go",
-                  onPressed: isLoading ? null : _submit,
-                  isLoading: isLoading,
-                ),
-                const SizedBox(height: 12),
-                AppButton(
-                  label: 'Skip for now',
-                  onPressed: isLoading
-                      ? null
-                      : () => ref.read(onboardingProvider.notifier).skip(),
-                  isOutlined: true,
-                  color: AppColors.textMuted,
-                  textColor: AppColors.textSecondary,
-                ),
-                const SizedBox(height: 48),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -234,11 +268,12 @@ class _AvatarPicker extends StatelessWidget {
         alignment: Alignment.bottomRight,
         children: [
           Container(
-            width: 100,
-            height: 100,
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.inputBg,
+              color: const Color(0xFF1A1A1A),
+              border: Border.all(color: const Color(0xFF2A2A2A), width: 2),
               image: avatarFile != null
                   ? DecorationImage(
                       image: FileImage(avatarFile!),
@@ -249,23 +284,23 @@ class _AvatarPicker extends StatelessWidget {
             child: avatarFile == null
                 ? const Icon(
                     Icons.person_rounded,
-                    size: 52,
-                    color: AppColors.textMuted,
+                    size: 48,
+                    color: Color(0xFF3A3A3A),
                   )
                 : null,
           ),
           Container(
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
-              color: AppColors.blurple,
+              color: const Color(0xFFD8D8D8),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.channelBg, width: 2),
+              border: Border.all(color: const Color(0xFF0A0A0A), width: 2),
             ),
             child: const Icon(
               Icons.camera_alt_rounded,
-              size: 16,
-              color: Colors.white,
+              size: 14,
+              color: Color(0xFF0A0A0A),
             ),
           ),
         ],
@@ -289,12 +324,16 @@ class _SheetOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.textPrimary;
+    final c = color ?? const Color(0xFFCCCCCC);
     return ListTile(
       leading: Icon(icon, color: c),
       title: Text(
         label,
-        style: GoogleFonts.inter(color: c, fontWeight: FontWeight.w500),
+        style: GoogleFonts.spaceMono(
+          color: c,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       onTap: onTap,
     );

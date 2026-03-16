@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/plugless_logo.dart';
 import '../../../../router/app_routes.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -37,6 +38,15 @@ class ProfilePage extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
+                    ),
+                  ),
+                  // Logo watermark
+                  Positioned(
+                    top: 16,
+                    right: 20,
+                    child: Opacity(
+                      opacity: 0.15,
+                      child: const PluglessLogo(size: 32),
                     ),
                   ),
                   // Avatar
