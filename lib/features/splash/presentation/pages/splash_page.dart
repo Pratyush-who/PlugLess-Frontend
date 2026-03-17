@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../router/app_routes.dart';
 import '../../../auth/presentation/widgets/auth_dot_grid.dart';
+import '../../../chat/presentation/providers/global_chat_provider.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
@@ -39,12 +42,10 @@ class _SplashPageState extends State<SplashPage>
     _plugSlide = Tween<Offset>(
       begin: const Offset(-0.08, 0),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
-      ),
-    );
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+    ));
 
     _lessOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -55,12 +56,10 @@ class _SplashPageState extends State<SplashPage>
     _lessSlide = Tween<Offset>(
       begin: const Offset(-0.08, 0),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
-      ),
-    );
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
+    ));
 
     _tagOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -70,7 +69,18 @@ class _SplashPageState extends State<SplashPage>
     );
 
     _ctrl.forward();
+    _prewarmChat(); // kick off in background, don't await
     _navigate();
+  }
+
+  /// Starts loading chat data in the background during the splash animation
+  /// so the history is ready by the time the user reaches home.
+  Future<void> _prewarmChat() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token != null && mounted) {
+      ref.read(globalChatProvider.notifier).reload();
+    }
   }
 
   Future<void> _navigate() async {
@@ -95,7 +105,6 @@ class _SplashPageState extends State<SplashPage>
       body: Stack(
         children: [
           const Positioned.fill(child: AuthDotGrid()),
-
           Center(
             child: AnimatedBuilder(
               animation: _ctrl,
@@ -104,7 +113,6 @@ class _SplashPageState extends State<SplashPage>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── PLUG (dim) ──
                     Opacity(
                       opacity: _plugOpacity.value,
                       child: SlideTransition(
@@ -120,8 +128,6 @@ class _SplashPageState extends State<SplashPage>
                         ),
                       ),
                     ),
-
-                    // ── LESS (bright) ──
                     Opacity(
                       opacity: _lessOpacity.value,
                       child: SlideTransition(
@@ -137,10 +143,7 @@ class _SplashPageState extends State<SplashPage>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ── Tagline ──
                     Opacity(
                       opacity: _tagOpacity.value,
                       child: Padding(
@@ -149,9 +152,8 @@ class _SplashPageState extends State<SplashPage>
                           'Meet Your People.',
                           style: GoogleFonts.spaceMono(
                             fontSize: 13,
-                            color: const Color.fromARGB(255, 199, 199, 199),
+                            color: const Color(0xFFC7C7C7),
                             letterSpacing: 1.5,
-                            
                           ),
                         ),
                       ),
@@ -161,8 +163,6 @@ class _SplashPageState extends State<SplashPage>
               },
             ),
           ),
-
-          // ── Version ──
           Positioned(
             bottom: 40,
             left: 0,

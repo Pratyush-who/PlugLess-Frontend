@@ -119,7 +119,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           ],
                         ),
 
-                        // ── Form section: greeting + fields ──
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

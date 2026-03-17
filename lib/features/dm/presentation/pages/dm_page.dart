@@ -1,33 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/plugless_logo.dart';
 
 class DmPage extends StatelessWidget {
-  const DmPage({super.key});
+  const DmPage({super.key, required this.onMenuTap});
+
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFF0A0A0A),
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            const PluglessLogo(size: 14),
-            const SizedBox(width: 12),
-            Container(width: 1, height: 28, color: const Color(0xFF3A3A3A)),
-            const SizedBox(width: 12),
-            Text(
-              'Direct Messages',
-              style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-            ),
-          ],
+        backgroundColor: const Color(0xFF0A0A0A),
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0),
+          child: Container(height: 1, color: const Color(0xFF1A1A1A)),
+        ),
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Color(0xFF888888), size: 22),
+          onPressed: onMenuTap,
+        ),
+        title: Text(
+          'Direct Messages',
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
         ),
         actions: [
           IconButton(

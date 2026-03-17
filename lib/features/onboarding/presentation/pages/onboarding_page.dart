@@ -222,26 +222,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       onPressed: isLoading ? null : _submit,
                       isLoading: isLoading,
                     ),
-                    const SizedBox(height: 16),
-
-                    // ── Skip ──
-                    Center(
-                      child: GestureDetector(
-                        onTap: isLoading
-                            ? null
-                            : () =>
-                                ref.read(onboardingProvider.notifier).skip(),
-                        child: Text(
-                          'SKIP FOR NOW',
-                          style: GoogleFonts.spaceMono(
-                            fontSize: 12,
-                            color: const Color(0xFF636363),
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-
                     const SizedBox(height: 60),
                   ],
                 ),
