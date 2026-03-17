@@ -87,7 +87,8 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
       _stompClient?.deactivate();
       _stompClient = null;
     });
-    return const GlobalChatState();
+    Future.microtask(_bootstrap);
+    return const GlobalChatState(isLoading: true);
   }
 
   Future<void> reload() async {

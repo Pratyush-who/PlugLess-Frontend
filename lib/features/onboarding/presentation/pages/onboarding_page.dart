@@ -1,9 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/plugless_logo.dart';
@@ -12,6 +14,8 @@ import '../../../auth/presentation/widgets/auth_button.dart';
 import '../../../auth/presentation/widgets/auth_dot_grid.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../providers/onboarding_provider.dart';
+import '../widgets/avatar_picker.dart';
+import '../widgets/sheet_option.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -71,7 +75,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               ),
             ),
             const SizedBox(height: 16),
-            _SheetOption(
+            SheetOption(
               icon: Icons.photo_library_rounded,
               label: 'Choose Photo',
               onTap: () {
@@ -79,7 +83,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 _pickImage(ImageSource.gallery);
               },
             ),
-            _SheetOption(
+            SheetOption(
               icon: Icons.camera_alt_rounded,
               label: 'Take Photo',
               onTap: () {
@@ -88,7 +92,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               },
             ),
             if (hasAvatar)
-              _SheetOption(
+              SheetOption(
                 icon: Icons.delete_rounded,
                 label: 'Remove Photo',
                 color: AppColors.error,
@@ -156,7 +160,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     const PluglessLogo(size: 28),
                     const SizedBox(height: 28),
 
-                    // ── Heading ──
                     Text(
                       'SET UP YOUR\nPROFILE',
                       style: GoogleFonts.bebasNeue(
@@ -178,9 +181,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
                     const SizedBox(height: 36),
 
-                    // ── Avatar ──
                     Center(
-                      child: _AvatarPicker(
+                      child: AvatarPicker(
                         avatarFile: avatarFile,
                         onTap: _showImageOptions,
                       ),
@@ -188,7 +190,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
                     const SizedBox(height: 40),
 
-                    // ── Fields ──
                     AuthTextField(
                       label: 'username',
                       hint: 'plugmaster',
@@ -230,92 +231,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AvatarPicker extends StatelessWidget {
-  const _AvatarPicker({required this.onTap, this.avatarFile});
-
-  final VoidCallback onTap;
-  final File? avatarFile;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF1A1A1A),
-              border: Border.all(color: const Color(0xFF2A2A2A), width: 2),
-              image: avatarFile != null
-                  ? DecorationImage(
-                      image: FileImage(avatarFile!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: avatarFile == null
-                ? const Icon(
-                    Icons.person_rounded,
-                    size: 48,
-                    color: Color(0xFF3A3A3A),
-                  )
-                : null,
-          ),
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD8D8D8),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF0A0A0A), width: 2),
-            ),
-            child: const Icon(
-              Icons.camera_alt_rounded,
-              size: 14,
-              color: Color(0xFF0A0A0A),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetOption extends StatelessWidget {
-  const _SheetOption({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? const Color(0xFFCCCCCC);
-    return ListTile(
-      leading: Icon(icon, color: c),
-      title: Text(
-        label,
-        style: GoogleFonts.spaceMono(
-          color: c,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 }
