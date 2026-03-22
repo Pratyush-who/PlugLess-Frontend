@@ -12,7 +12,8 @@ class DateDivider extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          const Expanded(child: Divider(color: Color(0xFF1E1E1E), thickness: 1)),
+          const Expanded(
+              child: Divider(color: Color(0xFF1E1E1E), thickness: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
@@ -24,7 +25,8 @@ class DateDivider extends StatelessWidget {
               ),
             ),
           ),
-          const Expanded(child: Divider(color: Color(0xFF1E1E1E), thickness: 1)),
+          const Expanded(
+              child: Divider(color: Color(0xFF1E1E1E), thickness: 1)),
         ],
       ),
     );

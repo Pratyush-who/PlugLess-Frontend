@@ -26,4 +26,19 @@ class UserEntity {
   final List<String> friendIds;
   final List<String> friendRequestIds;
   final String createdAt;
+
+  UserEntity copyWith({bool? isOnline}) => UserEntity(
+        id: id,
+        email: email,
+        userName: userName,
+        displayName: displayName,
+        bio: bio,
+        status: status,
+        profileImageUrl: profileImageUrl,
+        lastSeen: lastSeen,
+        isOnline: isOnline ?? this.isOnline,
+        friendIds: friendIds,
+        friendRequestIds: friendRequestIds,
+        createdAt: createdAt,
+      );
 }

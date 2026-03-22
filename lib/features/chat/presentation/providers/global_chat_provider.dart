@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
+import '../../../../core/auth/auth_state_service.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 
@@ -38,6 +39,15 @@ class ChatMessage {
           DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'senderUserName': senderUserName,
+        'senderDisplayName': senderDisplayName,
+        'senderAvatar': senderAvatar,
+        'content': content,
+        'timestamp': timestamp.toIso8601String(),
+      };
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -75,6 +85,10 @@ class GlobalChatState {
   }
 }
 
+// ── Cache key ─────────────────────────────────────────────────────────────────
+
+const _kCachedHistory = 'cached_global_history';
+
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class GlobalChatNotifier extends Notifier<GlobalChatState> {
@@ -101,28 +115,56 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
 
   Future<void> _bootstrap() async {
     _isBootstrapping = true;
-    try {
-      await _loadHistory();
-      await _connectSocket();
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Could not connect to global chat.',
-      );
-    } finally {
-      _isBootstrapping = false;
-    }
+    // Load history: network first, cache fallback — never blocks showing content
+    await _loadHistory();
+    // Connect socket: best-effort, failures shown as banner but don't clear messages
+    _connectSocket().catchError((_) {
+      state = state.copyWith(isConnected: false);
+    });
+    _isBootstrapping = false;
   }
 
   Future<void> _loadHistory() async {
-    final resp = await ApiClient.instance.dio.get(Endpoints.globalHistory);
-    final data = resp.data;
-    if (data is! List) throw StateError('Bad history response');
-    final msgs = data
-        .whereType<Map<String, dynamic>>()
-        .map(ChatMessage.fromJson)
-        .toList(growable: false);
-    state = state.copyWith(messages: msgs, isLoading: false, clearError: true);
+    try {
+      final resp = await ApiClient.instance.dio.get(Endpoints.globalHistory);
+      final data = resp.data;
+      if (data is! List) throw StateError('Bad history response');
+      final msgs = data
+          .whereType<Map<String, dynamic>>()
+          .map(ChatMessage.fromJson)
+          .toList(growable: false);
+      state = state.copyWith(messages: msgs, isLoading: false, clearError: true);
+      _saveHistoryCache(msgs);
+    } catch (_) {
+      await _loadCachedHistory();
+    }
+  }
+
+  Future<void> _loadCachedHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kCachedHistory);
+      if (raw != null) {
+        final list = jsonDecode(raw) as List<dynamic>;
+        final msgs = list
+            .whereType<Map<String, dynamic>>()
+            .map(ChatMessage.fromJson)
+            .toList(growable: false);
+        state = state.copyWith(messages: msgs, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  void _saveHistoryCache(List<ChatMessage> msgs) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          _kCachedHistory, jsonEncode(msgs.map((m) => m.toJson()).toList()));
+    } catch (_) {}
   }
 
   Future<void> _connectSocket() async {
@@ -157,16 +199,23 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
           );
         },
         onStompError: (frame) {
-          state = state.copyWith(
-            isConnected: false,
-            error: 'Connection error.',
-          );
+          final msg = (frame.headers['message'] ?? '').toLowerCase();
+          if (msg.contains('401') ||
+              msg.contains('unauthorized') ||
+              msg.contains('forbidden')) {
+            AuthStateService.instance.onUnauthorized();
+            return;
+          }
+          state = state.copyWith(isConnected: false, error: 'Connection error.');
         },
-        onWebSocketError: (_) {
+        onWebSocketError: (error) {
+          final errStr = error.toString().toLowerCase();
+          if (errStr.contains('401') || errStr.contains('unauthorized')) {
+            AuthStateService.instance.onUnauthorized();
+            return;
+          }
           state = state.copyWith(
-            isConnected: false,
-            error: 'WebSocket disconnected.',
-          );
+              isConnected: false, error: 'WebSocket disconnected.');
         },
         onDisconnect: (_) => state = state.copyWith(isConnected: false),
       ),

@@ -25,30 +25,12 @@ class CommunityDrawer extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 16, 12),
               child: Row(
                 children: [
-                  usersAsync.when(
-                    data: (users) => Text(
-                      'ONLINE — ${users.length}',
-                      style: GoogleFonts.spaceMono(
-                        color: const Color(0xFF888888),
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    loading: () => Text(
-                      'ONLINE NOW',
-                      style: GoogleFonts.spaceMono(
-                        color: const Color(0xFF555555),
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    error: (_, __) => Text(
-                      'ONLINE NOW',
-                      style: GoogleFonts.spaceMono(
-                        color: const Color(0xFF555555),
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                      ),
+                  Text(
+                    'ONLINE NOW',
+                    style: GoogleFonts.spaceMono(
+                      color: const Color(0xFF888888),
+                      fontSize: 11,
+                      letterSpacing: 1.5,
                     ),
                   ),
                   const Spacer(),
@@ -81,7 +63,12 @@ class CommunityDrawer extends ConsumerWidget {
                   ),
                 ),
                 data: (users) {
-                  if (users.isEmpty) {
+                  // Deduplicate by ID (backend may return same session twice)
+                  final seen = <String>{};
+                  final unique = users
+                      .where((u) => seen.add(u.id))
+                      .toList(growable: false);
+                  if (unique.isEmpty) {
                     return Center(
                       child: Text(
                         'No one online right now.',
@@ -94,8 +81,8 @@ class CommunityDrawer extends ConsumerWidget {
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: users.length,
-                    itemBuilder: (_, i) => _OnlineUserTile(user: users[i]),
+                    itemCount: unique.length,
+                    itemBuilder: (_, i) => _OnlineUserTile(user: unique[i]),
                   );
                 },
               ),

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../providers/global_chat_provider.dart';
+import '../providers/global_stats_provider.dart';
 import '../providers/online_users_provider.dart';
 import '../widgets/community_drawer.dart';
 import '../widgets/date_divider.dart';
@@ -117,6 +118,37 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
           ],
         ),
         actions: [
+          Consumer(builder: (context, ref, _) {
+            final total = ref.watch(globalStatsProvider).valueOrNull ?? 0;
+            if (total <= 0) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: AppColors.online,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$total',
+                      style: GoogleFonts.spaceMono(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
           Consumer(builder: (context, ref, _) {
             final count =
                 ref.watch(onlineUsersProvider).valueOrNull?.length ?? 0;

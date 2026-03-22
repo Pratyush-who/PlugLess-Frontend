@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/auth/auth_state_service.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
@@ -12,9 +13,10 @@ import 'app_routes.dart';
 class AppRouter {
   AppRouter._();
 
-  static GoRouter get router => GoRouter(
+  static final GoRouter router = GoRouter(
         initialLocation: AppRoutes.splash,
         debugLogDiagnostics: false,
+        refreshListenable: AuthStateService.instance,
         redirect: _guard,
         routes: [
           GoRoute(

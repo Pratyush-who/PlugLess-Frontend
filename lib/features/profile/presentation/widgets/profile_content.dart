@@ -15,7 +15,8 @@ class ProfileContent extends StatelessWidget {
     required this.onRetry,
   });
 
-  final UserEntity user;
+  /// Null when offline with no cached data — settings still render.
+  final UserEntity? user;
   final VoidCallback onMenuTap;
   final VoidCallback onSignOut;
   final VoidCallback onRetry;
@@ -85,18 +86,19 @@ class ProfileContent extends StatelessWidget {
                             color: const Color(0xFF0A0A0A),
                             width: 3,
                           ),
-                          image: user.profileImageUrl != null
+                          image: user?.profileImageUrl != null
                               ? DecorationImage(
-                                  image: NetworkImage(user.profileImageUrl!),
+                                  image: NetworkImage(user!.profileImageUrl!),
                                   fit: BoxFit.cover,
                                 )
                               : null,
                         ),
-                        child: user.profileImageUrl == null
+                        child: user?.profileImageUrl == null
                             ? Center(
                                 child: Text(
-                                  user.displayName.isNotEmpty
-                                      ? user.displayName[0].toUpperCase()
+                                  user != null &&
+                                          user!.displayName.isNotEmpty
+                                      ? user!.displayName[0].toUpperCase()
                                       : '?',
                                   style: GoogleFonts.bebasNeue(
                                     fontSize: 36,
@@ -114,7 +116,7 @@ class ProfileContent extends StatelessWidget {
                           height: 18,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: user.isOnline
+                            color: user?.isOnline == true
                                 ? AppColors.online
                                 : const Color(0xFF555555),
                             border: Border.all(
@@ -143,132 +145,173 @@ class ProfileContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  user.displayName,
-                  style: GoogleFonts.bebasNeue(
-                    color: const Color(0xFFF2F2F2),
-                    fontSize: 34,
-                    letterSpacing: 1,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '@${user.userName}',
-                      style: GoogleFonts.spaceMono(
-                        color: const Color(0xFF999999),
-                        fontSize: 12,
-                        letterSpacing: 0.5,
-                      ),
+                if (user == null) ...[
+                  // ── Offline placeholder ──────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF141414),
+                      borderRadius: BorderRadius.circular(6),
+                      border:
+                          Border.all(color: const Color(0xFF2A2A2A)),
                     ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: user.isOnline
-                            ? const Color(0xFF0D1F12)
-                            : const Color(0xFF141414),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: user.isOnline
-                              ? const Color(0xFF1A3320)
-                              : const Color(0xFF1E1E1E),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.wifi_off_rounded,
+                            color: Color(0xFF555555), size: 14),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Profile unavailable offline',
+                            style: GoogleFonts.spaceMono(
+                              color: const Color(0xFF555555),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: onRetry,
+                          child: Text(
+                            'retry',
+                            style: GoogleFonts.spaceMono(
+                              color: const Color(0xFF888888),
+                              fontSize: 11,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ] else ...[
+                  // ── User info ────────────────────────────────────────
+                  Text(
+                    user!.displayName,
+                    style: GoogleFonts.bebasNeue(
+                      color: const Color(0xFFF2F2F2),
+                      fontSize: 34,
+                      letterSpacing: 1,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '@${user!.userName}',
+                        style: GoogleFonts.spaceMono(
+                          color: const Color(0xFF999999),
+                          fontSize: 12,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: user.isOnline
-                                  ? AppColors.online
-                                  : const Color(0xFF555555),
-                            ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: user!.isOnline
+                              ? const Color(0xFF0D1F12)
+                              : const Color(0xFF141414),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: user!.isOnline
+                                ? const Color(0xFF1A3320)
+                                : const Color(0xFF1E1E1E),
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            user.isOnline ? 'Online' : 'Offline',
-                            style: GoogleFonts.inter(
-                              color: user.isOnline
-                                  ? AppColors.online
-                                  : const Color(0xFF666666),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: user!.isOnline
+                                    ? AppColors.online
+                                    : const Color(0xFF555555),
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 5),
+                            Text(
+                              user!.isOnline ? 'Online' : 'Offline',
+                              style: GoogleFonts.inter(
+                                color: user!.isOnline
+                                    ? AppColors.online
+                                    : const Color(0xFF666666),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user.email,
-                  style: GoogleFonts.spaceMono(
-                    color: const Color(0xFF555555),
-                    fontSize: 11,
+                    ],
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                DarkCard(
-                  label: 'ABOUT ME',
-                  child: Text(
-                    user.bio?.isNotEmpty == true ? user.bio! : 'no bio yet.',
+                  const SizedBox(height: 4),
+                  Text(
+                    user!.email,
                     style: GoogleFonts.spaceMono(
-                      color: user.bio?.isNotEmpty == true
-                          ? const Color(0xFFCCCCCC)
-                          : const Color(0xFF444444),
-                      fontSize: 12,
-                      height: 1.6,
+                      color: const Color(0xFF555555),
+                      fontSize: 11,
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 10),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: DarkCard(
-                        label: 'MEMBER SINCE',
-                        child: Text(
-                          _formatDate(user.createdAt),
-                          style: GoogleFonts.bebasNeue(
-                            color: const Color(0xFFCCCCCC),
-                            fontSize: 18,
-                            letterSpacing: 1,
+                  const SizedBox(height: 24),
+                  DarkCard(
+                    label: 'ABOUT ME',
+                    child: Text(
+                      user!.bio?.isNotEmpty == true
+                          ? user!.bio!
+                          : 'no bio yet.',
+                      style: GoogleFonts.spaceMono(
+                        color: user!.bio?.isNotEmpty == true
+                            ? const Color(0xFFCCCCCC)
+                            : const Color(0xFF444444),
+                        fontSize: 12,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DarkCard(
+                          label: 'MEMBER SINCE',
+                          child: Text(
+                            _formatDate(user!.createdAt),
+                            style: GoogleFonts.bebasNeue(
+                              color: const Color(0xFFCCCCCC),
+                              fontSize: 18,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: DarkCard(
-                        label: 'FRIENDS',
-                        child: Text(
-                          '${user.friendIds.length}',
-                          style: GoogleFonts.bebasNeue(
-                            color: const Color(0xFFCCCCCC),
-                            fontSize: 18,
-                            letterSpacing: 1,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DarkCard(
+                          label: 'FRIENDS',
+                          child: Text(
+                            '${user!.friendIds.length}',
+                            style: GoogleFonts.bebasNeue(
+                              color: const Color(0xFFCCCCCC),
+                              fontSize: 18,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 26),
+                ],
 
-                const SizedBox(height: 26),
-
+                // ── Settings (always visible) ────────────────────────────
                 Text(
                   'SETTINGS',
                   style: GoogleFonts.spaceMono(

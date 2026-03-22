@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../auth/auth_state_service.dart';
+
 class ApiClient {
   ApiClient._();
 
@@ -55,9 +57,7 @@ class _AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      // Token expired — clear and let router handle redirect
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
+      await AuthStateService.instance.onUnauthorized();
     }
     handler.next(err);
   }

@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../router/app_routes.dart';
@@ -9,22 +10,57 @@ import '../../../auth/presentation/providers/current_user_provider.dart';
 import '../../../chat/presentation/providers/global_chat_provider.dart';
 import '../widgets/profile_content.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key, required this.onMenuTap});
 
   final VoidCallback onMenuTap;
 
-  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  Timer? _retryTimer;
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _signOut() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     ref.invalidate(currentUserProvider);
     ref.read(globalChatProvider.notifier).reload();
-    if (context.mounted) context.go(AppRoutes.login);
+    if (mounted) context.go(AppRoutes.login);
+  }
+
+  void _retry() {
+    _retryTimer?.cancel();
+    ref.invalidate(currentUserProvider);
+  }
+
+  void _scheduleRetry() {
+    _retryTimer?.cancel();
+    _retryTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) ref.invalidate(currentUserProvider);
+    });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
+    final isConnected = ref.watch(globalChatProvider.select((s) => s.isConnected));
+
+    // Auto-retry in background when fetch fails
+    ref.listen<AsyncValue<dynamic>>(currentUserProvider, (_, next) {
+      if (next is AsyncError) {
+        _scheduleRetry();
+      } else {
+        _retryTimer?.cancel();
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
@@ -35,37 +71,17 @@ class ProfilePage extends ConsumerWidget {
             strokeWidth: 1.5,
           ),
         ),
-        error: (_, __) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'COULD NOT LOAD',
-                style: GoogleFonts.bebasNeue(
-                  color: const Color(0xFF666666),
-                  fontSize: 24,
-                  letterSpacing: 2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () => ref.invalidate(currentUserProvider),
-                child: Text(
-                  'tap to retry',
-                  style: GoogleFonts.spaceMono(
-                    color: const Color(0xFF888888),
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        error: (_, __) => ProfileContent(
+          user: null,
+          onMenuTap: widget.onMenuTap,
+          onSignOut: _signOut,
+          onRetry: _retry,
         ),
         data: (user) => ProfileContent(
-          user: user,
-          onMenuTap: onMenuTap,
-          onSignOut: () => _signOut(context, ref),
-          onRetry: () => ref.invalidate(currentUserProvider),
+          user: user.copyWith(isOnline: isConnected),
+          onMenuTap: widget.onMenuTap,
+          onSignOut: _signOut,
+          onRetry: _retry,
         ),
       ),
     );

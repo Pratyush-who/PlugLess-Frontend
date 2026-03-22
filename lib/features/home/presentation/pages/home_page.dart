@@ -1,11 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/widgets/plugless_logo.dart';
-import '../../../auth/domain/entities/user_entity.dart';
-import '../../../auth/presentation/providers/current_user_provider.dart';
 import '../../../auth/presentation/widgets/auth_dot_grid.dart';
 import '../../../chat/presentation/pages/global_chat_page.dart';
 import '../../../dm/presentation/pages/dm_page.dart';
@@ -52,7 +48,7 @@ class _HomePageState extends State<HomePage> {
 
 // ── Drawer ────────────────────────────────────────────────────────────────────
 
-class _AppDrawer extends ConsumerWidget {
+class _AppDrawer extends StatelessWidget {
   const _AppDrawer({required this.currentIndex, required this.onTap});
 
   final int currentIndex;
@@ -65,9 +61,7 @@ class _AppDrawer extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(currentUserProvider);
-
+  Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: const Color(0xFF0D0D0D),
       width: 280,
@@ -91,7 +85,7 @@ class _AppDrawer extends ConsumerWidget {
                       Text(
                         'Meet Your People.',
                         style: GoogleFonts.spaceMono(
-                          color: const Color(0xFF333333),
+                          color: const Color.fromARGB(255, 75, 75, 75),
                           fontSize: 10,
                           letterSpacing: 1,
                         ),
@@ -114,7 +108,7 @@ class _AppDrawer extends ConsumerWidget {
                   child: Text(
                     'CHANNELS',
                     style: GoogleFonts.spaceMono(
-                      color: const Color(0xFF333333),
+                      color: const Color.fromARGB(255, 89, 89, 89),
                       fontSize: 9,
                       letterSpacing: 2,
                     ),
@@ -132,20 +126,6 @@ class _AppDrawer extends ConsumerWidget {
                 }),
 
                 const Spacer(),
-
-                // ── Separator ─────────────────────────────────────────────
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 0),
-                  color: const Color(0xFF141414),
-                ),
-
-                // ── User tile ─────────────────────────────────────────────
-                userAsync.when(
-                  loading: () => const _DrawerUserShimmer(),
-                  error: (_, __) => const SizedBox(height: 64),
-                  data: (user) => _DrawerUserTile(user: user),
-                ),
               ],
             ),
           ),
@@ -207,7 +187,7 @@ class _DrawerNavItem extends StatelessWidget {
                       size: 18,
                       color: isActive
                           ? const Color(0xFFF2F2F2)
-                          : const Color(0xFF4A4A4A),
+                          : const Color(0xFF888888),
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -215,11 +195,11 @@ class _DrawerNavItem extends StatelessWidget {
                       style: GoogleFonts.inter(
                         color: isActive
                             ? const Color(0xFFF2F2F2)
-                            : const Color(0xFF555555),
+                            : const Color(0xFF999999),
                         fontSize: 14,
                         fontWeight: isActive
                             ? FontWeight.w600
-                            : FontWeight.w400,
+                            : FontWeight.w500,
                         letterSpacing: 0.1,
                       ),
                     ),
@@ -234,151 +214,8 @@ class _DrawerNavItem extends StatelessWidget {
   }
 }
 
-class _DrawerUserTile extends StatelessWidget {
-  const _DrawerUserTile({required this.user});
-
-  final UserEntity user;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF0A0A0A),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      child: Row(
-        children: [
-          // Avatar with online dot
-          Stack(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF1A1A1A),
-                  border: Border.all(color: const Color(0xFF1E1E1E), width: 1),
-                ),
-                child: ClipOval(
-                  child: user.profileImageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: user.profileImageUrl!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => _InitialAvatar(
-                            name: user.displayName,
-                          ),
-                        )
-                      : _InitialAvatar(name: user.displayName),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: user.isOnline
-                        ? const Color(0xFF23A55A)
-                        : const Color(0xFF555555),
-                    border: Border.all(
-                        color: const Color(0xFF0A0A0A), width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  user.displayName,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFFE0E0E0),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '@${user.userName}',
-                  style: GoogleFonts.spaceMono(
-                    color: const Color(0xFF444444),
-                    fontSize: 9,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DrawerUserShimmer extends StatelessWidget {
-  const _DrawerUserShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF0A0A0A),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                  width: 90, height: 12, color: const Color(0xFF1A1A1A)),
-              const SizedBox(height: 4),
-              Container(
-                  width: 60, height: 9, color: const Color(0xFF141414)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-class _InitialAvatar extends StatelessWidget {
-  const _InitialAvatar({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF1A1A1A),
-      alignment: Alignment.center,
-      child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: GoogleFonts.bebasNeue(
-          fontSize: 16,
-          color: const Color(0xFF666666),
-        ),
-      ),
-    );
-  }
-}
 
 class _NavItem {
   const _NavItem({required this.icon, required this.label});
