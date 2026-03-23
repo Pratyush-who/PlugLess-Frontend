@@ -11,6 +11,7 @@ import '../widgets/date_divider.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/message_input.dart';
 import '../widgets/message_tile.dart';
+import '../../../profile/presentation/widgets/public_profile_dialog.dart';
 
 class GlobalChatPage extends ConsumerStatefulWidget {
   const GlobalChatPage({super.key, required this.onMenuTap});
@@ -58,6 +59,10 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
   void _openMembersDrawer() {
     ref.invalidate(onlineUsersProvider);
     _scaffoldKey.currentState?.openEndDrawer();
+  }
+
+  Future<void> _openPublicProfileByUserName(String userName) {
+    return showPublicProfileDialog(context, userName: userName);
   }
 
   @override
@@ -279,7 +284,13 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
           _dateKey(prev.timestamp) == dateKey &&
           msg.timestamp.difference(prev.timestamp).inMinutes < 5;
 
-      items.add(MessageTile(message: msg, isGrouped: isGrouped));
+      items.add(
+        MessageTile(
+          message: msg,
+          isGrouped: isGrouped,
+          onProfileTap: () => _openPublicProfileByUserName(msg.senderUserName),
+        ),
+      );
     }
     return items;
   }
@@ -300,8 +311,18 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
     if (msgDay == yesterday) return 'Yesterday';
 
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }

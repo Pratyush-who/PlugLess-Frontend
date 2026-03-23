@@ -6,13 +6,56 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../providers/online_users_provider.dart';
+import '../../../profile/presentation/providers/public_profile_provider.dart';
+import '../../../profile/presentation/widgets/public_profile_dialog.dart';
 
-class CommunityDrawer extends ConsumerWidget {
+class CommunityDrawer extends ConsumerStatefulWidget {
   const CommunityDrawer({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(onlineUsersProvider);
+  ConsumerState<CommunityDrawer> createState() => _CommunityDrawerState();
+}
+
+class _CommunityDrawerState extends ConsumerState<CommunityDrawer> {
+  static const int _batchSize = 15;
+
+  final ScrollController _scrollController = ScrollController();
+  int _visibleCount = _batchSize;
+  int _totalUsers = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_visibleCount >= _totalUsers) return;
+
+    if (_scrollController.position.extentAfter < 220) {
+      setState(() {
+        final next = _visibleCount + _batchSize;
+        _visibleCount = next > _totalUsers ? _totalUsers : next;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final usersAsync = ref.watch(allPublicUsersProvider);
+    final onlineAsync = ref.watch(onlineUsersProvider);
+    final onlineSet = {
+      for (final u in onlineAsync.valueOrNull ?? const <UserEntity>[]) u.id,
+    };
 
     return Drawer(
       backgroundColor: const Color(0xFF111111),
@@ -26,25 +69,34 @@ class CommunityDrawer extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'ONLINE NOW',
+                    'MEMBERS',
                     style: GoogleFonts.spaceMono(
                       color: const Color(0xFF888888),
                       fontSize: 11,
                       letterSpacing: 1.5,
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${usersAsync.valueOrNull?.length ?? 0}',
+                    style: GoogleFonts.spaceMono(
+                      color: const Color(0xFF56565B),
+                      fontSize: 10,
+                    ),
+                  ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () => ref.invalidate(onlineUsersProvider),
+                    onTap: () {
+                      ref.invalidate(allPublicUsersProvider);
+                      ref.invalidate(onlineUsersProvider);
+                    },
                     child: const Icon(Icons.refresh_rounded,
                         color: Color(0xFF444444), size: 16),
                   ),
                 ],
               ),
             ),
-
             Container(height: 1, color: const Color(0xFF1A1A1A)),
-
             Expanded(
               child: usersAsync.when(
                 loading: () => const Center(
@@ -63,15 +115,17 @@ class CommunityDrawer extends ConsumerWidget {
                   ),
                 ),
                 data: (users) {
-                  // Deduplicate by ID (backend may return same session twice)
+                  // Deduplicate by ID to handle repeated rows from API.
                   final seen = <String>{};
                   final unique = users
                       .where((u) => seen.add(u.id))
                       .toList(growable: false);
+                  _totalUsers = unique.length;
+
                   if (unique.isEmpty) {
                     return Center(
                       child: Text(
-                        'No one online right now.',
+                        'No members found.',
                         style: GoogleFonts.spaceMono(
                           color: const Color(0xFF444444),
                           fontSize: 12,
@@ -79,10 +133,43 @@ class CommunityDrawer extends ConsumerWidget {
                       ),
                     );
                   }
+
+                  final visible = _visibleCount > unique.length
+                      ? unique.length
+                      : _visibleCount;
+                  final shown = unique.take(visible).toList(growable: false);
+
                   return ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: unique.length,
-                    itemBuilder: (_, i) => _OnlineUserTile(user: unique[i]),
+                    itemCount:
+                        shown.length + (shown.length < unique.length ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (i >= shown.length) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                          child: Text(
+                            'Showing ${shown.length} of ${unique.length}',
+                            style: GoogleFonts.spaceMono(
+                              color: const Color(0xFF5B5B60),
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      }
+                      final user = shown[i];
+                      return _MemberUserTile(
+                        user: user,
+                        isOnline: onlineSet.contains(user.id),
+                        onTap: () {
+                          showPublicProfileDialog(
+                            context,
+                            userId: user.id,
+                            userName: user.userName,
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
@@ -94,108 +181,112 @@ class CommunityDrawer extends ConsumerWidget {
   }
 }
 
-class _OnlineUserTile extends StatelessWidget {
-  const _OnlineUserTile({required this.user});
+class _MemberUserTile extends StatelessWidget {
+  const _MemberUserTile({
+    required this.user,
+    required this.isOnline,
+    required this.onTap,
+  });
 
   final UserEntity user;
+  final bool isOnline;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      child: Row(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: ClipOval(
-                  child: user.profileImageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: user.profileImageUrl!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) =>
-                              _AvatarFallback(name: user.displayName),
-                        )
-                      : _AvatarFallback(name: user.displayName),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.online,
-                    border:
-                        Border.all(color: const Color(0xFF111111), width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.displayName.isNotEmpty ? user.displayName : user.userName,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFFE0E0E0),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '@${user.userName}',
-                  style: GoogleFonts.spaceMono(
-                    color: const Color(0xFF555555),
-                    fontSize: 10,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D1F12),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF1A3320)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        child: Row(
+          children: [
+            Stack(
               children: [
                 Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.online,
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: ClipOval(
+                    child: user.profileImageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: user.profileImageUrl!,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) =>
+                                _AvatarFallback(name: user.displayName),
+                          )
+                        : _AvatarFallback(name: user.displayName),
                   ),
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  'online',
-                  style: GoogleFonts.spaceMono(
-                    color: AppColors.online,
-                    fontSize: 9,
-                    letterSpacing: 0.5,
+                if (isOnline)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.online,
+                        border: Border.all(
+                            color: const Color(0xFF111111), width: 2),
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.displayName.isNotEmpty
+                        ? user.displayName
+                        : user.userName,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFFE0E0E0),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '@${user.userName}',
+                    style: GoogleFonts.spaceMono(
+                      color: const Color(0xFF555555),
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isOnline
+                    ? const Color(0xFF0D1F12)
+                    : const Color(0xFF18181B),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isOnline
+                      ? const Color(0xFF1A3320)
+                      : const Color(0xFF2A2A2D),
+                ),
+              ),
+              child: Text(
+                isOnline ? 'online' : 'offline',
+                style: GoogleFonts.spaceMono(
+                  color: isOnline ? AppColors.online : const Color(0xFF6F6F75),
+                  fontSize: 9,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

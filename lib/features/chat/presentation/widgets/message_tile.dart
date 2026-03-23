@@ -9,10 +9,12 @@ class MessageTile extends StatelessWidget {
     super.key,
     required this.message,
     required this.isGrouped,
+    this.onProfileTap,
   });
 
   final ChatMessage message;
   final bool isGrouped;
+  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +42,23 @@ class MessageTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: ClipOval(
-              child: message.senderAvatar.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: message.senderAvatar,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) =>
-                          _AvatarFallback(name: displayName),
-                    )
-                  : _AvatarFallback(name: displayName),
+          GestureDetector(
+            onTap: onProfileTap,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: ClipOval(
+                child: message.senderAvatar.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: message.senderAvatar,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) =>
+                            _AvatarFallback(name: displayName),
+                      )
+                    : _AvatarFallback(name: displayName),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -64,12 +70,16 @@ class MessageTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      displayName,
-                      style: GoogleFonts.inter(
-                        color: const Color(0xFFF2F2F2),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                    GestureDetector(
+                      onTap: onProfileTap,
+                      behavior: HitTestBehavior.opaque,
+                      child: Text(
+                        displayName,
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFFF2F2F2),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
