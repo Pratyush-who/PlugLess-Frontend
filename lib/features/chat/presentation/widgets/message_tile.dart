@@ -18,9 +18,11 @@ class MessageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = message.senderDisplayName.isNotEmpty
-        ? message.senderDisplayName
-        : message.senderUserName;
+    // Prefer displayName, handle email usernames, fall back to userName
+    final displayName = _getDisplayName(
+      message.senderDisplayName,
+      message.senderUserName,
+    );
 
     if (isGrouped) {
       // Compact: indent to align with full message text (16 + 36 avatar + 12 gap = 64)
@@ -122,6 +124,20 @@ class MessageTile extends StatelessWidget {
     if (msgDay == today) return 'Today at $time';
     if (msgDay == yesterday) return 'Yesterday at $time';
     return '${local.day}/${local.month}/${local.year} $time';
+  }
+
+  /// Returns the best display name for a user.
+  /// - If displayName is provided, use it
+  /// - If displayName is empty but userName looks like an email, extract the part before @
+  /// - Fall back to the full userName
+  String _getDisplayName(String displayName, String userName) {
+    if (displayName.isNotEmpty) {
+      return displayName;
+    }
+    if (userName.contains('@')) {
+      return userName.split('@').first;
+    }
+    return userName;
   }
 }
 

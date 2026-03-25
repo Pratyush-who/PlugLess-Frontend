@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 import '../../../../core/auth/auth_state_service.dart';
+import '../../../../core/auth/token_service.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 
@@ -133,7 +134,8 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
           .whereType<Map<String, dynamic>>()
           .map(ChatMessage.fromJson)
           .toList(growable: false);
-      state = state.copyWith(messages: msgs, isLoading: false, clearError: true);
+      state =
+          state.copyWith(messages: msgs, isLoading: false, clearError: true);
       _saveHistoryCache(msgs);
     } catch (_) {
       await _loadCachedHistory();
@@ -168,8 +170,7 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
   }
 
   Future<void> _connectSocket() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenService.instance.getToken();
     if (token == null || token.isEmpty) throw StateError('No auth token');
 
     final wsUrl = _buildWsUrl(dotenv.env['BASE_URL'] ?? '', token);
@@ -206,7 +207,8 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
             AuthStateService.instance.onUnauthorized();
             return;
           }
-          state = state.copyWith(isConnected: false, error: 'Connection error.');
+          state =
+              state.copyWith(isConnected: false, error: 'Connection error.');
         },
         onWebSocketError: (error) {
           final errStr = error.toString().toLowerCase();
@@ -254,13 +256,11 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
     final ep = Endpoints.wsEndpoint.startsWith('/')
         ? Endpoints.wsEndpoint
         : '/${Endpoints.wsEndpoint}';
-    return base
-        .replace(
-          scheme: scheme,
-          path: '$basePath$ep',
-          queryParameters: {'token': token},
-        )
-        .toString();
+    return base.replace(
+      scheme: scheme,
+      path: '$basePath$ep',
+      queryParameters: {'token': token},
+    ).toString();
   }
 }
 

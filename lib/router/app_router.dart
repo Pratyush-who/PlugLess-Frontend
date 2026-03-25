@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth/auth_state_service.dart';
+import '../core/auth/token_service.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
@@ -14,38 +14,33 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-        initialLocation: AppRoutes.splash,
-        debugLogDiagnostics: false,
-        refreshListenable: AuthStateService.instance,
-        redirect: _guard,
-        routes: [
-          GoRoute(
-            path: AppRoutes.splash,
-            pageBuilder: (_, state) =>
-                _fadePage(state, const SplashPage()),
-          ),
-          GoRoute(
-            path: AppRoutes.login,
-            pageBuilder: (_, state) =>
-                _fadePage(state, const LoginPage()),
-          ),
-          GoRoute(
-            path: AppRoutes.signup,
-            pageBuilder: (_, state) =>
-                _fadePage(state, const SignupPage()),
-          ),
-          GoRoute(
-            path: AppRoutes.onboarding,
-            pageBuilder: (_, state) =>
-                _fadePage(state, const OnboardingPage()),
-          ),
-          GoRoute(
-            path: AppRoutes.home,
-            pageBuilder: (_, state) =>
-                _fadePage(state, const HomePage()),
-          ),
-        ],
-      );
+    initialLocation: AppRoutes.splash,
+    debugLogDiagnostics: false,
+    refreshListenable: AuthStateService.instance,
+    redirect: _guard,
+    routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        pageBuilder: (_, state) => _fadePage(state, const SplashPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        pageBuilder: (_, state) => _fadePage(state, const LoginPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        pageBuilder: (_, state) => _fadePage(state, const SignupPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        pageBuilder: (_, state) => _fadePage(state, const OnboardingPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        pageBuilder: (_, state) => _fadePage(state, const HomePage()),
+      ),
+    ],
+  );
 
   static Future<String?> _guard(
     BuildContext context,
@@ -53,8 +48,7 @@ class AppRouter {
   ) async {
     if (state.matchedLocation == AppRoutes.splash) return null;
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenService.instance.getToken();
     final isLoggedIn = token != null;
 
     final loc = state.matchedLocation;

@@ -45,19 +45,23 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      userName: json['userName'] as String,
-      displayName: json['displayName'] as String,
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      userName: json['userName'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
       bio: json['bio'] as String?,
       status: json['status'] as String?,
       profileImageUrl: json['profileImageUrl'] as String?,
       lastSeen: json['lastSeen'] as String?,
-      isOnline: json['isOnline'] as bool? ?? false,
-      friendIds: (json['friendIds'] as List?)?.map((e) => e as String).toList() ?? [],
-      friendRequestIds:
-          (json['friendRequestIds'] as List?)?.map((e) => e as String).toList() ?? [],
-      createdAt: json['createdAt'] as String,
+      isOnline: (json['isOnline'] ?? json['online']) as bool? ?? false,
+      friendIds:
+          (json['friendIds'] as List?)?.map((e) => e as String).toList() ?? [],
+      friendRequestIds: (json['friendRequestIds'] as List?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      createdAt:
+          json['createdAt'] as String? ?? DateTime.now().toIso8601String(),
     );
   }
 

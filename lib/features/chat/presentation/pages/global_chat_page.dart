@@ -169,27 +169,6 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
                           color: Color(0xFF888888), size: 22),
                       onPressed: _openMembersDrawer,
                     ),
-                    if (count > 0)
-                      Positioned(
-                        top: 8,
-                        right: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: AppColors.online,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$count',
-                            style: GoogleFonts.spaceMono(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),

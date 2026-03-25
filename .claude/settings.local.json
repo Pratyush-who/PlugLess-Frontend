@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(xargs grep:*)",
-      "Read(//d/Pratyush/AppDev//**)",
-      "Read(//d/Pratyush/SpringBoot//**)"
-    ]
-  }
-}

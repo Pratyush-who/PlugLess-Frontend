@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
+import '../../../../core/auth/token_service.dart';
 import '../../../auth/data/models/auth_response_model.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 
@@ -39,8 +39,7 @@ class OnboardingRepositoryImpl {
     final model = AuthResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', model.token);
+    await TokenService.instance.saveToken(model.token);
     return model.user.toEntity();
   }
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/auth/token_service.dart';
 import '../../../../router/app_routes.dart';
 import '../../../auth/presentation/widgets/auth_dot_grid.dart';
 import '../../../chat/presentation/providers/global_chat_provider.dart';
@@ -76,8 +76,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   /// Starts loading chat data in the background during the splash animation
   /// so the history is ready by the time the user reaches home.
   Future<void> _prewarmChat() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenService.instance.getToken();
     if (token != null && mounted) {
       ref.read(globalChatProvider.notifier).reload();
     }
@@ -86,8 +85,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2800));
     if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenService.instance.getToken();
     if (!mounted) return;
     context.go(token != null ? AppRoutes.home : AppRoutes.login);
   }

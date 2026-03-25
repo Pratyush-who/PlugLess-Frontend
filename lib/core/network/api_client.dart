@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/auth_state_service.dart';
+import '../auth/token_service.dart';
 
 class ApiClient {
   ApiClient._();
@@ -46,8 +46,7 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenService.instance.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }

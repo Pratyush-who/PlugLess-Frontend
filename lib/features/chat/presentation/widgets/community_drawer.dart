@@ -56,6 +56,7 @@ class _CommunityDrawerState extends ConsumerState<CommunityDrawer> {
     final onlineSet = {
       for (final u in onlineAsync.valueOrNull ?? const <UserEntity>[]) u.id,
     };
+    final onlineCount = onlineAsync.valueOrNull?.length ?? 0;
 
     return Drawer(
       backgroundColor: const Color(0xFF111111),
@@ -74,14 +75,6 @@ class _CommunityDrawerState extends ConsumerState<CommunityDrawer> {
                       color: const Color(0xFF888888),
                       fontSize: 11,
                       letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${usersAsync.valueOrNull?.length ?? 0}',
-                    style: GoogleFonts.spaceMono(
-                      color: const Color(0xFF56565B),
-                      fontSize: 10,
                     ),
                   ),
                   const Spacer(),
