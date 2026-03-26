@@ -39,6 +39,9 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
 
+  # Pagination
+  infinite_scroll_pagination: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

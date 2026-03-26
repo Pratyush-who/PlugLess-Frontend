@@ -15,11 +15,12 @@ class Endpoints {
 
   // Friends
   static String sendFriendRequest(String targetId) => '/friends/request/$targetId';
-  static String acceptFriendRequest(String requesterId) => '/friends/accept/$requesterId';
-  static String rejectFriendRequest(String requesterId) => '/friends/reject/$requesterId';
+  static String acceptFriendRequest(String requesterId) => '/friends/requests/$requesterId/accept';
+  static String rejectFriendRequest(String requesterId) => '/friends/requests/$requesterId/reject';
   static String removeFriend(String friendId) => '/friends/$friendId';
-  static const String myFriends = '/friends';
-  static const String incomingRequests = '/friends/requests';
+  static const String receivedRequests = '/friends/requests/received';
+  static const String sentRequests = '/friends/requests/sent';
+  static const String friendsList = '/friends/list';
 
   // Global Chat (REST)
   static const String globalHistory = '/chat/global/history';

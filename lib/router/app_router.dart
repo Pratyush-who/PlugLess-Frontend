@@ -8,6 +8,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
+import '../features/friends/presentation/pages/friends_page.dart';
 import 'app_routes.dart';
 
 class AppRouter {
@@ -38,6 +39,12 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.home,
         pageBuilder: (_, state) => _fadePage(state, const HomePage()),
+        routes: [
+          GoRoute(
+            path: 'profile/friends',
+            pageBuilder: (_, state) => _fadePage(state, const FriendsPage()),
+          ),
+        ],
       ),
     ],
   );

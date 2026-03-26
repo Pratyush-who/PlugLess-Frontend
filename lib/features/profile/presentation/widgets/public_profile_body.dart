@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/current_user_provider.dart';
 import '../providers/public_profile_provider.dart';
@@ -78,7 +79,7 @@ class PublicProfileBody extends ConsumerWidget {
                     Text(
                       user.displayName,
                       style: GoogleFonts.inter(
-                        color: const Color(0xFFF2F2F3),
+                        color: AppColors.profileTextPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
@@ -89,7 +90,7 @@ class PublicProfileBody extends ConsumerWidget {
                     Text(
                       '@${user.userName}',
                       style: GoogleFonts.spaceMono(
-                        color: const Color(0xFF8B8B91),
+                        color: AppColors.profileTextSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -98,7 +99,7 @@ class PublicProfileBody extends ConsumerWidget {
                       Text(
                         user.status!.trim(),
                         style: GoogleFonts.inter(
-                          color: const Color(0xFFB6B6BC),
+                          color: AppColors.profileTextTertiary,
                           fontSize: 12,
                         ),
                         maxLines: 2,
@@ -123,7 +124,7 @@ class PublicProfileBody extends ConsumerWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: const Color(0xFF141416),
+              color: AppColors.profileBioBg,
               border: Border.all(color: const Color(0xFF1F1F23)),
             ),
             child: Text(
@@ -131,7 +132,7 @@ class PublicProfileBody extends ConsumerWidget {
                   ? user.bio!.trim()
                   : 'No bio yet.',
               style: GoogleFonts.inter(
-                color: const Color(0xFFCBCBD0),
+                color: AppColors.profileTextTertiary,
                 fontSize: 13,
                 height: 1.45,
               ),

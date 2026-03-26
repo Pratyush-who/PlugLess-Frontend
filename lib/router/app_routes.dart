@@ -11,4 +11,5 @@ class AppRoutes {
   static const String globalChat = '/home/global-chat';
   static const String dm = '/home/dm';
   static const String profile = '/home/profile';
+  static const String friends = '/home/profile/friends';
 }

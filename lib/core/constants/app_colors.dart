@@ -37,4 +37,14 @@ class AppColors {
 
   // Divider
   static const Color divider = Color(0xFF3F4147);
+
+  // Profile (improved contrast for public profile popup)
+  static const Color profileTextPrimary = Color(0xFFF2F2F3); // Display name
+  static const Color profileTextSecondary =
+      Color(0xFFC5C5CB); // Username (lighter)
+  static const Color profileTextTertiary =
+      Color(0xFFD8D8DD); // Status/Bio (lighter)
+  static const Color profileLabel = Color(0xFF9A9AA0); // Meta labels (lighter)
+  static const Color profileBioBg =
+      Color(0xFF1A1A1E); // Bio container (lighter)
 }

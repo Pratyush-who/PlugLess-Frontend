@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../router/app_routes.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import 'dark_card.dart';
 import 'profile_settings_item.dart';
 
-class ProfileContent extends StatelessWidget {
+class ProfileContent extends ConsumerWidget {
   const ProfileContent({
     super.key,
     required this.user,
@@ -25,8 +28,18 @@ class ProfileContent extends StatelessWidget {
     try {
       final dt = DateTime.parse(raw);
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[dt.month - 1]} ${dt.year}';
     } catch (_) {
@@ -35,7 +48,7 @@ class ProfileContent extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return CustomScrollView(
       slivers: [
         // ── Banner ────────────────────────────────────────────────────────
@@ -45,8 +58,8 @@ class ProfileContent extends StatelessWidget {
           backgroundColor: const Color(0xFF0A0A0A),
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.menu_rounded,
-                color: Colors.white70, size: 22),
+            icon:
+                const Icon(Icons.menu_rounded, color: Colors.white70, size: 22),
             onPressed: onMenuTap,
           ),
           bottom: PreferredSize(
@@ -96,8 +109,7 @@ class ProfileContent extends StatelessWidget {
                         child: user?.profileImageUrl == null
                             ? Center(
                                 child: Text(
-                                  user != null &&
-                                          user!.displayName.isNotEmpty
+                                  user != null && user!.displayName.isNotEmpty
                                       ? user!.displayName[0].toUpperCase()
                                       : '?',
                                   style: GoogleFonts.bebasNeue(
@@ -153,8 +165,7 @@ class ProfileContent extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
                       borderRadius: BorderRadius.circular(6),
-                      border:
-                          Border.all(color: const Color(0xFF2A2A2A)),
+                      border: Border.all(color: const Color(0xFF2A2A2A)),
                     ),
                     child: Row(
                       children: [
@@ -277,36 +288,116 @@ class ProfileContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DarkCard(
-                          label: 'MEMBER SINCE',
-                          child: Text(
-                            _formatDate(user!.createdAt),
-                            style: GoogleFonts.bebasNeue(
-                              color: const Color(0xFFCCCCCC),
-                              fontSize: 18,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
+                  DarkCard(
+                    label: 'MEMBER SINCE',
+                    child: Text(
+                      _formatDate(user!.createdAt),
+                      style: GoogleFonts.bebasNeue(
+                        color: const Color(0xFFCCCCCC),
+                        fontSize: 18,
+                        letterSpacing: 1,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: DarkCard(
-                          label: 'FRIENDS',
-                          child: Text(
-                            '${user!.friendIds.length}',
-                            style: GoogleFonts.bebasNeue(
-                              color: const Color(0xFFCCCCCC),
-                              fontSize: 18,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Interactive Friends Card
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.friends),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF141414),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF2A2A2A)),
                       ),
-                    ],
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'FRIENDS',
+                                style: GoogleFonts.spaceMono(
+                                  color: const Color(0xFF444444),
+                                  fontSize: 10,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${user!.friendIds.length}',
+                                        style: GoogleFonts.bebasNeue(
+                                          color: const Color(0xFFCCCCCC),
+                                          fontSize: 28,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Friends',
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFF666666),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2C6DFE),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'View',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          // Friend Requests Badge
+                          if (user!.friendRequestIds.isNotEmpty)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C6DFE),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${user!.friendRequestIds.length}',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 26),
                 ],

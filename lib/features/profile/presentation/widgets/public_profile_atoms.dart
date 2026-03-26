@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 
 class PublicProfileHeader extends StatelessWidget {
@@ -87,7 +88,7 @@ class PublicProfileMetaRow extends StatelessWidget {
             child: Text(
               label.toUpperCase(),
               style: GoogleFonts.spaceMono(
-                color: const Color(0xFF7C7C82),
+                color: AppColors.profileLabel,
                 fontSize: 10,
               ),
             ),
@@ -96,7 +97,7 @@ class PublicProfileMetaRow extends StatelessWidget {
             child: Text(
               value,
               style: GoogleFonts.inter(
-                color: const Color(0xFFCBCBD0),
+                color: AppColors.profileTextTertiary,
                 fontSize: 12,
               ),
               maxLines: 1,
@@ -135,7 +136,7 @@ class PublicProfileErrorState extends StatelessWidget {
                 : 'Could not load this profile.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: const Color(0xFFB6B6BC),
+              color: AppColors.profileTextTertiary,
               fontSize: 13,
             ),
           ),
