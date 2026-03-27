@@ -161,11 +161,21 @@ class _FriendsListTabState extends ConsumerState<FriendsListTab> {
           ),
           firstPageProgressIndicatorBuilder: (_) => const Padding(
             padding: EdgeInsets.all(32),
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF2C6DFE),
+              ),
+            ),
           ),
           newPageProgressIndicatorBuilder: (_) => const Padding(
             padding: EdgeInsets.all(16),
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF2C6DFE),
+              ),
+            ),
           ),
         ),
       ),

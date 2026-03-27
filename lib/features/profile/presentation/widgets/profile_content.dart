@@ -300,101 +300,67 @@ class ProfileContent extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // Interactive Friends Card
+                  // Friends Row
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.friends),
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       decoration: BoxDecoration(
                         color: const Color(0xFF141414),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF2A2A2A)),
+                        border: Border.all(color: const Color(0xFF1E1E1E)),
                       ),
-                      child: Stack(
+                      child: Row(
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'FRIENDS',
-                                style: GoogleFonts.spaceMono(
-                                  color: const Color(0xFF444444),
-                                  fontSize: 10,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${user!.friendIds.length}',
-                                        style: GoogleFonts.bebasNeue(
-                                          color: const Color(0xFFCCCCCC),
-                                          fontSize: 28,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Friends',
-                                        style: GoogleFonts.inter(
-                                          color: const Color(0xFF666666),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF2C6DFE),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'View',
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          const Icon(
+                            Icons.people_alt_rounded,
+                            color: Color(0xFF7C7C82),
+                            size: 16,
                           ),
-                          // Friend Requests Badge
-                          if (user!.friendRequestIds.isNotEmpty)
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2C6DFE),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${user!.friendRequestIds.length}',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Friends',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFDCDDDE),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${user!.friendIds.length}',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF888888),
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (user!.friendRequestIds.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2C6DFE),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${user!.friendRequestIds.length}',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
+                          ],
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Color(0xFF555555),
+                            size: 18,
+                          ),
                         ],
                       ),
                     ),
@@ -406,7 +372,7 @@ class ProfileContent extends ConsumerWidget {
                 Text(
                   'SETTINGS',
                   style: GoogleFonts.spaceMono(
-                    color: const Color(0xFF444444),
+                    color: const Color(0xFF888888),
                     fontSize: 10,
                     letterSpacing: 2,
                   ),

@@ -20,7 +20,7 @@ class Endpoints {
   static String removeFriend(String friendId) => '/friends/$friendId';
   static const String receivedRequests = '/friends/requests/received';
   static const String sentRequests = '/friends/requests/sent';
-  static const String friendsList = '/friends/list';
+  static const String friendsList = '/friends';
 
   // Global Chat (REST)
   static const String globalHistory = '/chat/global/history';

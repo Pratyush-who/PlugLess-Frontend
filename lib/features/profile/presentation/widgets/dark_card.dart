@@ -22,7 +22,7 @@ class DarkCard extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.spaceMono(
-              color: const Color(0xFF555555),
+              color: const Color(0xFF888888),
               fontSize: 9,
               letterSpacing: 1.5,
             ),

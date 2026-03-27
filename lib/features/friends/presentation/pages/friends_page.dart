@@ -53,6 +53,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage>
             controller: _tabController,
             indicatorColor: const Color(0xFF2C6DFE),
             indicatorWeight: 3,
+            dividerColor: Colors.transparent,
             labelColor: const Color(0xFFF2F3F5),
             unselectedLabelColor: const Color(0xFF7C7C82),
             labelStyle: GoogleFonts.inter(
