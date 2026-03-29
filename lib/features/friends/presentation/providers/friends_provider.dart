@@ -24,14 +24,46 @@ class PaginatedUsersResponse {
     required this.totalElements,
   });
 
-  factory PaginatedUsersResponse.fromJson(Map<String, dynamic> json) {
-    final content =
-        (json['content'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+  factory PaginatedUsersResponse.fromJson(dynamic raw) {
+    // Plain array response: [ {...}, {...} ]
+    if (raw is List) {
+      final users = raw
+          .whereType<Map<String, dynamic>>()
+          .map((e) => UserModel.fromJson(e).toEntity())
+          .toList();
+      return PaginatedUsersResponse(
+        users: users,
+        currentPage: 0,
+        totalPages: 1,
+        totalElements: users.length,
+      );
+    }
+
+    final json = raw as Map<String, dynamic>;
+
+    // Find the list — Spring uses 'content', others use 'users'/'data'/'friends'
+    final rawList = json['content'] ??
+        json['users'] ??
+        json['data'] ??
+        json['friends'] ??
+        [];
+
+    final users = (rawList as List)
+        .whereType<Map<String, dynamic>>()
+        .map((e) => UserModel.fromJson(e).toEntity())
+        .toList();
+
+    final totalPages =
+        (json['totalPages'] ?? json['total_pages'] ?? json['pages'] ?? 1)
+            as int;
+
     return PaginatedUsersResponse(
-      users: content.map((e) => UserModel.fromJson(e).toEntity()).toList(),
-      currentPage: json['number'] ?? 0,
-      totalPages: json['totalPages'] ?? 1,
-      totalElements: json['totalElements'] ?? 0,
+      users: users,
+      currentPage:
+          (json['number'] ?? json['page'] ?? json['currentPage'] ?? 0) as int,
+      totalPages: totalPages < 1 ? 1 : totalPages,
+      totalElements:
+          (json['totalElements'] ?? json['total'] ?? users.length) as int,
     );
   }
 }
@@ -43,7 +75,7 @@ final receivedRequestsProvider = FutureProvider.autoDispose
     Endpoints.receivedRequests,
     queryParameters: {'page': page, 'size': _pageSize},
   );
-  return PaginatedUsersResponse.fromJson(response.data);
+  return PaginatedUsersResponse.fromJson(response.data as dynamic);
 });
 
 // ── Sent Friend Requests ──────────────────────────────────────────────────
@@ -53,7 +85,7 @@ final sentRequestsProvider = FutureProvider.autoDispose
     Endpoints.sentRequests,
     queryParameters: {'page': page, 'size': _pageSize},
   );
-  return PaginatedUsersResponse.fromJson(response.data);
+  return PaginatedUsersResponse.fromJson(response.data as dynamic);
 });
 
 // ── Friends List ──────────────────────────────────────────────────────────
@@ -63,7 +95,7 @@ final friendsListProvider = FutureProvider.autoDispose
     Endpoints.friendsList,
     queryParameters: {'page': page, 'size': _pageSize},
   );
-  return PaginatedUsersResponse.fromJson(response.data);
+  return PaginatedUsersResponse.fromJson(response.data as dynamic);
 });
 
 // ── Friend Actions State ────────────────────────────────────────────────────

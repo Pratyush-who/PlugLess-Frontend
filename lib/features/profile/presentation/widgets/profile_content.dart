@@ -18,7 +18,6 @@ class ProfileContent extends ConsumerWidget {
     required this.onRetry,
   });
 
-  /// Null when offline with no cached data — settings still render.
   final UserEntity? user;
   final VoidCallback onMenuTap;
   final VoidCallback onSignOut;
@@ -49,111 +48,127 @@ class ProfileContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return CustomScrollView(
-      slivers: [
-        // ── Banner ────────────────────────────────────────────────────────
-        SliverAppBar(
-          expandedHeight: 220,
-          pinned: true,
-          backgroundColor: const Color(0xFF0A0A0A),
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon:
-                const Icon(Icons.menu_rounded, color: Colors.white70, size: 22),
-            onPressed: onMenuTap,
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(0),
-            child: Container(height: 1, color: const Color(0xFF1A1A1A)),
-          ),
-          flexibleSpace: FlexibleSpaceBar(
-            background: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  'assets/images/profile-bg.jpg',
-                  fit: BoxFit.cover,
-                ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, Color(0xDD0A0A0A)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0.35, 1.0],
+    final topPad = MediaQuery.of(context).padding.top;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Banner
+              SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/images/profile-bg.jpg',
+                      fit: BoxFit.cover,
                     ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 20,
-                  left: 20,
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 84,
-                        height: 84,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF1A1A1A),
-                          border: Border.all(
-                            color: const Color(0xFF0A0A0A),
-                            width: 3,
-                          ),
-                          image: user?.profileImageUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(user!.profileImageUrl!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
+                    // top → transparent, bottom → solid bg
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, Color(0xF00A0A0A)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.3, 1.0],
                         ),
-                        child: user?.profileImageUrl == null
-                            ? Center(
-                                child: Text(
-                                  user != null && user!.displayName.isNotEmpty
-                                      ? user!.displayName[0].toUpperCase()
-                                      : '?',
-                                  style: GoogleFonts.bebasNeue(
-                                    fontSize: 36,
-                                    color: const Color(0xFF888888),
-                                  ),
-                                ),
+                      ),
+                    ),
+                    // Action buttons row
+                    Positioned(
+                      top: topPad + 4,
+                      left: 4,
+                      right: 4,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.menu_rounded,
+                                color: Colors.white70, size: 22),
+                            onPressed: onMenuTap,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_rounded,
+                                color: Colors.white70, size: 20),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Avatar overlapping the banner bottom edge
+              Positioned(
+                bottom: -40,
+                left: 20,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF1A1A1A),
+                        border: Border.all(
+                          color: const Color(0xFF0A0A0A),
+                          width: 4,
+                        ),
+                        image: user?.profileImageUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(user!.profileImageUrl!),
+                                fit: BoxFit.cover,
                               )
                             : null,
                       ),
-                      Positioned(
-                        bottom: 4,
-                        right: 4,
-                        child: Container(
-                          width: 18,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: user?.isOnline == true
-                                ? AppColors.online
-                                : const Color(0xFF555555),
-                            border: Border.all(
-                                color: const Color(0xFF0A0A0A), width: 2),
-                          ),
+                      child: user?.profileImageUrl == null
+                          ? Center(
+                              child: Text(
+                                user != null && user!.displayName.isNotEmpty
+                                    ? user!.displayName[0].toUpperCase()
+                                    : '?',
+                                style: GoogleFonts.bebasNeue(
+                                  fontSize: 34,
+                                  color: const Color(0xFF888888),
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: user?.isOnline == true
+                              ? AppColors.online
+                              : const Color(0xFF555555),
+                          border: Border.all(
+                              color: const Color(0xFF0A0A0A), width: 2.5),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit_rounded,
-                  color: Colors.white70, size: 20),
-              onPressed: () {},
-            ),
-          ],
-        ),
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          // Space for avatar overflow
+          const SizedBox(height: 52),
+
+          // ── Content ────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -202,12 +217,12 @@ class ProfileContent extends ConsumerWidget {
                     user!.displayName,
                     style: GoogleFonts.bebasNeue(
                       color: const Color(0xFFF2F2F2),
-                      fontSize: 34,
+                      fontSize: 32,
                       letterSpacing: 1,
                       height: 1,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -219,10 +234,10 @@ class ProfileContent extends ConsumerWidget {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                            horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
                           color: user!.isOnline
                               ? const Color(0xFF0D1F12)
@@ -263,7 +278,7 @@ class ProfileContent extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     user!.email,
                     style: GoogleFonts.spaceMono(
@@ -271,7 +286,7 @@ class ProfileContent extends ConsumerWidget {
                       fontSize: 11,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   DarkCard(
                     label: 'ABOUT ME',
                     child: Text(
@@ -281,13 +296,13 @@ class ProfileContent extends ConsumerWidget {
                       style: GoogleFonts.spaceMono(
                         color: user!.bio?.isNotEmpty == true
                             ? const Color(0xFFCCCCCC)
-                            : const Color(0xFF444444),
+                            : const Color(0xFF555555),
                         fontSize: 12,
                         height: 1.6,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   DarkCard(
                     label: 'MEMBER SINCE',
                     child: Text(
@@ -299,7 +314,7 @@ class ProfileContent extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Friends Row
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.friends),
@@ -365,10 +380,10 @@ class ProfileContent extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 24),
                 ],
 
-                // ── Settings (always visible) ────────────────────────────
+                // ── Settings (always visible) ──────────────────────────
                 Text(
                   'SETTINGS',
                   style: GoogleFonts.spaceMono(
@@ -415,8 +430,8 @@ class ProfileContent extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
