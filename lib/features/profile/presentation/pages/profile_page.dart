@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/auth/auth_state_service.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/endpoints.dart';
 import '../../../../router/app_routes.dart';
 import '../../../auth/presentation/providers/current_user_provider.dart';
 import '../../../chat/presentation/providers/global_chat_provider.dart';
+import '../../../chat/presentation/providers/global_stats_provider.dart';
 import '../../../chat/presentation/providers/online_users_provider.dart';
 import '../../../profile/presentation/providers/public_profile_provider.dart';
 import '../widgets/profile_content.dart';
@@ -69,19 +72,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
-  /// Performs comprehensive logout: clears token, all cached data, and invalidates all providers.
+  /// Performs logout in the order the backend requires:
+  /// 1. Disconnect WebSocket (STOMP)
+  /// 2. Call POST /auth/logout with bearer token (token still valid at this point)
+  /// 3. Clear token + local cache
+  /// 4. Invalidate all providers
   Future<void> _performLogout() async {
-    // Clear all cached data and token through AuthStateService
+    // 1. Disconnect WebSocket first — sends STOMP DISCONNECT frame while token is valid
+    ref.read(globalChatProvider.notifier).disconnect();
+
+    // 2. Notify backend — token is still in secure storage so the interceptor attaches it
+    try {
+      await ApiClient.instance.dio.post(Endpoints.logout);
+    } catch (_) {
+      // Best-effort: proceed with local logout even if the call fails
+    }
+
+    // 3. Delete token + clear cached user data
     await AuthStateService.instance.logout();
 
-    // Invalidate all cached providers to clear UI state
-    // This prevents old cached data from persisting when switching accounts
+    // 4. Invalidate all cached providers so stale data doesn't survive account switches
     ref.invalidate(currentUserProvider);
     ref.invalidate(allPublicUsersProvider);
     ref.invalidate(onlineUsersProvider);
+    ref.invalidate(globalStatsProvider);
     ref.invalidate(publicUserByIdProvider);
     ref.invalidate(friendRequestActionsProvider);
-    ref.read(globalChatProvider.notifier).reload();
 
     if (mounted) {
       context.go(AppRoutes.login);

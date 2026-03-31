@@ -4,6 +4,7 @@ class Endpoints {
   // Auth
   static const String signUp = '/auth/signup';
   static const String signIn = '/auth/login';
+  static const String logout = '/auth/logout';
 
   // Users
   static const String me = '/users/me';
@@ -15,8 +16,8 @@ class Endpoints {
 
   // Friends
   static String sendFriendRequest(String targetId) => '/friends/request/$targetId';
-  static String acceptFriendRequest(String requesterId) => '/friends/requests/$requesterId/accept';
-  static String rejectFriendRequest(String requesterId) => '/friends/requests/$requesterId/reject';
+  static const String acceptFriendRequest = '/friends/requests/accept';
+  static const String rejectFriendRequest = '/friends/requests/reject';
   static String removeFriend(String friendId) => '/friends/$friendId';
   static const String receivedRequests = '/friends/requests/received';
   static const String sentRequests = '/friends/requests/sent';
@@ -30,4 +31,5 @@ class Endpoints {
   static const String wsEndpoint = '/ws';
   static const String stompGlobalSend = '/app/chat.global';
   static const String stompGlobalTopic = '/topic/global';
+  static const String stompUserErrors = '/user/queue/errors';
 }

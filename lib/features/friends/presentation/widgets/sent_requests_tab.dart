@@ -6,7 +6,6 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../profile/presentation/widgets/public_profile_dialog.dart';
 import '../providers/friends_provider.dart';
-import 'friend_request_item.dart';
 
 class SentRequestsTab extends ConsumerStatefulWidget {
   const SentRequestsTab({super.key});

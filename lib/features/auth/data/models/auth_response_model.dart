@@ -45,15 +45,15 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      userName: json['userName'] as String? ?? '',
-      displayName: json['displayName'] as String? ?? '',
-      bio: json['bio'] as String?,
+      id: (json['id'] ?? json['userId'] ?? json['user_id'] ?? '') as String? ?? '',
+      email: (json['email'] ?? '') as String? ?? '',
+      userName: (json['userName'] ?? json['username'] ?? json['user_name'] ?? '') as String? ?? '',
+      displayName: (json['displayName'] ?? json['display_name'] ?? json['name'] ?? json['fullName'] ?? json['full_name'] ?? '') as String? ?? '',
+      bio: (json['bio'] ?? json['about']) as String?,
       status: json['status'] as String?,
-      profileImageUrl: json['profileImageUrl'] as String?,
-      lastSeen: json['lastSeen'] as String?,
-      isOnline: (json['isOnline'] ?? json['online']) as bool? ?? false,
+      profileImageUrl: (json['profileImageUrl'] ?? json['profile_image_url'] ?? json['avatar'] ?? json['avatarUrl']) as String?,
+      lastSeen: (json['lastSeen'] ?? json['last_seen']) as String?,
+      isOnline: (json['isOnline'] ?? json['online'] ?? json['is_online']) as bool? ?? false,
       friendIds:
           (json['friendIds'] as List?)?.map((e) => e as String).toList() ?? [],
       friendRequestIds: (json['friendRequestIds'] as List?)

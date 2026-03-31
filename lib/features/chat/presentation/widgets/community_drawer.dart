@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../providers/global_stats_provider.dart';
 import '../providers/online_users_provider.dart';
 import '../../../profile/presentation/providers/public_profile_provider.dart';
 import '../../../profile/presentation/widgets/public_profile_dialog.dart';
@@ -52,11 +53,10 @@ class _CommunityDrawerState extends ConsumerState<CommunityDrawer> {
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allPublicUsersProvider);
-    final onlineAsync = ref.watch(onlineUsersProvider);
+    final onlineCount = ref.watch(globalStatsProvider).valueOrNull ?? 0;
     final onlineSet = {
-      for (final u in onlineAsync.valueOrNull ?? const <UserEntity>[]) u.id,
+      for (final u in ref.watch(onlineUsersProvider).valueOrNull ?? const <UserEntity>[]) u.id,
     };
-    final onlineCount = onlineAsync.valueOrNull?.length ?? 0;
 
     return Drawer(
       backgroundColor: const Color(0xFF111111),
@@ -77,10 +77,30 @@ class _CommunityDrawerState extends ConsumerState<CommunityDrawer> {
                       letterSpacing: 1.5,
                     ),
                   ),
+                  if (onlineCount > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.online,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$onlineCount',
+                      style: GoogleFonts.spaceMono(
+                        color: AppColors.online,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   GestureDetector(
                     onTap: () {
                       ref.invalidate(allPublicUsersProvider);
+                      ref.invalidate(globalStatsProvider);
                       ref.invalidate(onlineUsersProvider);
                     },
                     child: const Icon(Icons.refresh_rounded,
@@ -215,8 +235,8 @@ class _MemberUserTile extends StatelessWidget {
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      width: 12,
-                      height: 12,
+                      width: 11,
+                      height: 11,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.online,
@@ -254,28 +274,6 @@ class _MemberUserTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: isOnline
-                    ? const Color(0xFF0D1F12)
-                    : const Color(0xFF18181B),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isOnline
-                      ? const Color(0xFF1A3320)
-                      : const Color(0xFF2A2A2D),
-                ),
-              ),
-              child: Text(
-                isOnline ? 'online' : 'offline',
-                style: GoogleFonts.spaceMono(
-                  color: isOnline ? AppColors.online : const Color(0xFF6F6F75),
-                  fontSize: 9,
-                  letterSpacing: 0.5,
-                ),
               ),
             ),
           ],

@@ -8,7 +8,6 @@ import '../providers/global_stats_provider.dart';
 import '../providers/online_users_provider.dart';
 import '../widgets/community_drawer.dart';
 import '../widgets/date_divider.dart';
-import '../widgets/error_banner.dart';
 import '../widgets/message_input.dart';
 import '../widgets/message_tile.dart';
 import '../../../profile/presentation/widgets/public_profile_dialog.dart';
@@ -75,6 +74,42 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
       if (nextLen > prevLen) _scrollToBottom();
       if (prev?.isLoading == true && !next.isLoading && nextLen > 0) {
         _scrollToBottom(animate: false);
+      }
+
+      // Show moderation error as a snackbar (only the sender sees this)
+      if (next.moderationError != null &&
+          next.moderationError != prev?.moderationError) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.block_rounded,
+                      color: Color(0xFFFF6B6B), size: 16),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      next.moderationError!,
+                      style: const TextStyle(
+                        color: Color(0xFFFFD0D0),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF2A1010),
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFF5A1A1A)),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        ref.read(globalChatProvider.notifier).clearModerationError();
       }
     });
 
@@ -154,35 +189,18 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
               ),
             );
           }),
-          Consumer(builder: (context, ref, _) {
-            final count =
-                ref.watch(onlineUsersProvider).valueOrNull?.length ?? 0;
-            return GestureDetector(
-              onTap: _openMembersDrawer,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 4, 0),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.people_alt_rounded,
-                          color: Color(0xFF888888), size: 22),
-                      onPressed: _openMembersDrawer,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          IconButton(
+            icon: const Icon(Icons.people_alt_rounded,
+                color: Color(0xFF888888), size: 22),
+            onPressed: _openMembersDrawer,
+          ),
         ],
       ),
       body: Column(
         children: [
-          if (chat.error != null)
-            ErrorBanner(
-              message: chat.error!,
-              onRetry: () => ref.read(globalChatProvider.notifier).reload(),
-            ),
+          if (!chat.isConnected && !chat.isLoading)
+            _ConnectingBanner(),
+
           Expanded(child: _buildBody(chat)),
           MessageInput(
             controller: _controller,
@@ -304,5 +322,48 @@ class _GlobalChatPageState extends ConsumerState<GlobalChatPage> {
       'December',
     ];
     return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+}
+
+class _ConnectingBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => LinearGradient(
+        colors: const [
+          Color(0xFF0A0A0A),
+          Colors.white,
+          Colors.white,
+          Color(0xFF0A0A0A),
+        ],
+        stops: const [0.0, 0.18, 0.82, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: Container(
+        height: 32,
+        color: const Color(0xFF0A0A0A),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 11,
+              height: 11,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: const Color(0xFF555555),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Connecting...',
+              style: GoogleFonts.spaceMono(
+                color: const Color(0xFF555555),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

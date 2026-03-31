@@ -130,11 +130,10 @@ class _DmTile extends StatelessWidget {
                     height: 11,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: online
-                          ? AppColors.online
-                          : const Color(0xFF555555),
-                      border: Border.all(
-                          color: const Color(0xFF0A0A0A), width: 2),
+                      color:
+                          online ? AppColors.online : const Color(0xFF555555),
+                      border:
+                          Border.all(color: const Color(0xFF0A0A0A), width: 2),
                     ),
                   ),
                 ),
@@ -154,9 +153,8 @@ class _DmTile extends StatelessWidget {
                           color: unread > 0
                               ? AppColors.textPrimary
                               : const Color(0xFFAAAAAA),
-                          fontWeight: unread > 0
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight:
+                              unread > 0 ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
@@ -182,9 +180,8 @@ class _DmTile extends StatelessWidget {
                                 ? const Color(0xFFCCCCCC)
                                 : const Color(0xFF555555),
                             fontSize: 12,
-                            fontWeight: unread > 0
-                                ? FontWeight.w500
-                                : FontWeight.w400,
+                            fontWeight:
+                                unread > 0 ? FontWeight.w500 : FontWeight.w400,
                           ),
                         ),
                       ),

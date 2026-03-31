@@ -34,6 +34,7 @@ class AuthStateService extends ChangeNotifier {
     // Clear all cached data from shared preferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('cached_user_me');
+    await prefs.remove('cached_global_history'); // prevent chat history leaking to next account
     await prefs.remove('token'); // Fallback for old preference location
   }
 }

@@ -1,12 +1,36 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:plugless/features/auth/data/models/auth_response_model.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/current_user_provider.dart';
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+/// For SENT requests — prefers 'recipient' (the person we sent to).
+UserEntity _extractUser(Map<String, dynamic> item) {
+  final nested = item['recipient'] ??
+      item['requester'] ??
+      item['sender'] ??
+      item['user'];
+  if (nested is Map<String, dynamic>) {
+    return UserModel.fromJson(nested).toEntity();
+  }
+  return UserModel.fromJson(item).toEntity();
+}
+
+/// For RECEIVED requests — prefers 'requester' (the person who sent to us).
+UserEntity _extractReceivedUser(Map<String, dynamic> item) {
+  final nested = item['requester'] ??
+      item['sender'] ??
+      item['recipient'] ??
+      item['user'];
+  if (nested is Map<String, dynamic>) {
+    return UserModel.fromJson(nested).toEntity();
+  }
+  return UserModel.fromJson(item).toEntity();
+}
 
 // ── Pagination Models ──────────────────────────────────────────────────────
 const int _pageSize = 20;
@@ -24,13 +48,16 @@ class PaginatedUsersResponse {
     required this.totalElements,
   });
 
-  factory PaginatedUsersResponse.fromJson(dynamic raw) {
+  factory PaginatedUsersResponse.fromJson(
+    dynamic raw, {
+    UserEntity Function(Map<String, dynamic>) extractor = _extractUser,
+  }) {
     // Plain array response: [ {...}, {...} ]
     if (raw is List) {
-      final users = raw
+      final List<UserEntity> users = raw
           .whereType<Map<String, dynamic>>()
-          .map((e) => UserModel.fromJson(e).toEntity())
-          .toList();
+          .map(extractor)
+          .toList(growable: false);
       return PaginatedUsersResponse(
         users: users,
         currentPage: 0,
@@ -41,17 +68,21 @@ class PaginatedUsersResponse {
 
     final json = raw as Map<String, dynamic>;
 
-    // Find the list — Spring uses 'content', others use 'users'/'data'/'friends'
+    // Find the list — Spring uses 'content', others use various keys
     final rawList = json['content'] ??
         json['users'] ??
         json['data'] ??
         json['friends'] ??
+        json['requests'] ??
+        json['sentRequests'] ??
+        json['receivedRequests'] ??
+        json['pendingRequests'] ??
         [];
 
-    final users = (rawList as List)
+    final List<UserEntity> users = (rawList as List)
         .whereType<Map<String, dynamic>>()
-        .map((e) => UserModel.fromJson(e).toEntity())
-        .toList();
+        .map(extractor)
+        .toList(growable: false);
 
     final totalPages =
         (json['totalPages'] ?? json['total_pages'] ?? json['pages'] ?? 1)
@@ -75,7 +106,10 @@ final receivedRequestsProvider = FutureProvider.autoDispose
     Endpoints.receivedRequests,
     queryParameters: {'page': page, 'size': _pageSize},
   );
-  return PaginatedUsersResponse.fromJson(response.data as dynamic);
+  return PaginatedUsersResponse.fromJson(
+    response.data as dynamic,
+    extractor: _extractReceivedUser,
+  );
 });
 
 // ── Sent Friend Requests ──────────────────────────────────────────────────
@@ -122,7 +156,8 @@ class FriendActionsNotifier extends Notifier<FriendActionsState> {
         state.copyWith(processingIds: {...state.processingIds, requesterId});
     try {
       await ApiClient.instance.dio.post(
-        Endpoints.acceptFriendRequest(requesterId),
+        Endpoints.acceptFriendRequest,
+        queryParameters: {'requesterId': requesterId},
       );
       // Invalidate providers to refresh data
       ref.invalidate(currentUserProvider);
@@ -144,7 +179,8 @@ class FriendActionsNotifier extends Notifier<FriendActionsState> {
         state.copyWith(processingIds: {...state.processingIds, requesterId});
     try {
       await ApiClient.instance.dio.post(
-        Endpoints.rejectFriendRequest(requesterId),
+        Endpoints.rejectFriendRequest,
+        queryParameters: {'requesterId': requesterId},
       );
       // Invalidate providers to refresh data
       ref.invalidate(currentUserProvider);

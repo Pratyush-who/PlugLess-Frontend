@@ -60,6 +60,7 @@ class GlobalChatState {
     this.isConnected = false,
     this.isSending = false,
     this.error,
+    this.moderationError,
   });
 
   final List<ChatMessage> messages;
@@ -67,6 +68,9 @@ class GlobalChatState {
   final bool isConnected;
   final bool isSending;
   final String? error;
+  /// Set when the backend rejects a message (blocked word, etc.).
+  /// Cleared immediately after the UI shows it.
+  final String? moderationError;
 
   GlobalChatState copyWith({
     List<ChatMessage>? messages,
@@ -75,6 +79,8 @@ class GlobalChatState {
     bool? isSending,
     String? error,
     bool clearError = false,
+    String? moderationError,
+    bool clearModerationError = false,
   }) {
     return GlobalChatState(
       messages: messages ?? this.messages,
@@ -82,6 +88,9 @@ class GlobalChatState {
       isConnected: isConnected ?? this.isConnected,
       isSending: isSending ?? this.isSending,
       error: clearError ? null : (error ?? this.error),
+      moderationError: clearModerationError
+          ? null
+          : (moderationError ?? this.moderationError),
     );
   }
 }
@@ -104,6 +113,19 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
     });
     Future.microtask(_bootstrap);
     return const GlobalChatState(isLoading: true);
+  }
+
+  void clearModerationError() {
+    state = state.copyWith(clearModerationError: true);
+  }
+
+  /// Cleanly disconnects the WebSocket without attempting to reconnect.
+  /// Call this on logout — bypasses the _isBootstrapping guard.
+  void disconnect() {
+    _isBootstrapping = false;
+    _stompClient?.deactivate();
+    _stompClient = null;
+    state = const GlobalChatState();
   }
 
   Future<void> reload() async {
@@ -185,6 +207,7 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
         webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
         onConnect: (_) {
           state = state.copyWith(isConnected: true, clearError: true);
+          // Global chat messages
           _stompClient?.subscribe(
             destination: Endpoints.stompGlobalTopic,
             callback: (frame) {
@@ -195,6 +218,21 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
               final msg = ChatMessage.fromJson(decoded);
               if (!state.messages.any((m) => m.id == msg.id)) {
                 state = state.copyWith(messages: [...state.messages, msg]);
+              }
+            },
+          );
+          // Sender-only moderation/error feedback from backend
+          _stompClient?.subscribe(
+            destination: Endpoints.stompUserErrors,
+            callback: (frame) {
+              final body = frame.body;
+              if (body == null || body.isEmpty) return;
+              try {
+                final map = jsonDecode(body) as Map<String, dynamic>;
+                final msg = (map['message'] as String?) ?? 'Message blocked.';
+                state = state.copyWith(moderationError: msg);
+              } catch (_) {
+                state = state.copyWith(moderationError: 'Message blocked.');
               }
             },
           );

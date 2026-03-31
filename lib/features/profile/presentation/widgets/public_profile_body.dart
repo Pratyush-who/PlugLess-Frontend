@@ -213,21 +213,6 @@ class PublicProfileBody extends ConsumerWidget {
     final day = parsed.day.toString().padLeft(2, '0');
     return '${parsed.year}-$month-$day';
   }
-
-  /// Returns a color based on friendship status for visual feedback.
-  Color _getFriendshipStatusColor(String status) {
-    if (status.contains('Already friends')) {
-      return const Color(0xFF31A24C); // Green
-    } else if (status.contains('Request sent') ||
-        status.contains('Request received')) {
-      return const Color(0xFFC19A1B); // Amber
-    } else if (status.contains('Send Friend Request')) {
-      return const Color(0xFF2C6DFE); // Blue
-    } else if (status.contains('This is you')) {
-      return const Color(0xFF7C7C82); // Gray
-    }
-    return const Color(0xFF7C7C82); // Default gray
-  }
 }
 
 class _FriendButtonConfig {
