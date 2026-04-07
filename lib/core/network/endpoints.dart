@@ -15,7 +15,8 @@ class Endpoints {
   static String userById(String id) => '/users/$id';
 
   // Friends
-  static String sendFriendRequest(String targetId) => '/friends/request/$targetId';
+  static String sendFriendRequest(String targetId) =>
+      '/friends/request/$targetId';
   static const String acceptFriendRequest = '/friends/requests/accept';
   static const String rejectFriendRequest = '/friends/requests/reject';
   static String removeFriend(String friendId) => '/friends/$friendId';
@@ -27,9 +28,19 @@ class Endpoints {
   static const String globalHistory = '/chat/global/history';
   static const String globalStats = '/chat/global/stats';
 
+  // Direct Messages (REST)
+  static String dmHistory(String friendUserId) =>
+      '/api/messages/history/$friendUserId';
+  static String dmHistoryFallback(String friendUserId) =>
+      '/messages/history/$friendUserId';
+
   // WebSocket
   static const String wsEndpoint = '/ws';
   static const String stompGlobalSend = '/app/chat.global';
   static const String stompGlobalTopic = '/topic/global';
   static const String stompUserErrors = '/user/queue/errors';
+  static const String stompDmSend = '/app/chat/dm/send';
+  static const String stompDmDelete = '/app/chat/dm/delete';
+  static const String stompDmMessagesQueue = '/user/queue/messages';
+  static const String stompDmUpdatesQueue = '/user/queue/message-updates';
 }

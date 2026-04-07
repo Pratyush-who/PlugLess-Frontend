@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../../auth/domain/entities/user_entity.dart';
+import '../providers/dm_provider.dart';
+import 'dm_thread_page.dart';
 import '../../../../core/constants/app_colors.dart';
 
-class DmPage extends StatelessWidget {
+class DmPage extends ConsumerWidget {
   const DmPage({super.key, required this.onMenuTap});
 
   final VoidCallback onMenuTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final friendsAsync = ref.watch(dmFriendsProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
       appBar: AppBar(
@@ -34,46 +41,81 @@ class DmPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_rounded, color: AppColors.textMuted),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.textMuted),
+            onPressed: () => ref.invalidate(dmFriendsProvider),
           ),
         ],
       ),
-      body: ListView(
-        children: const [
-          _DmTile(
-            initial: 'A',
-            name: 'alex_r',
-            preview: 'yo you there?',
-            time: '2h',
-            unread: 2,
-            online: true,
+      body: friendsAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            color: AppColors.blurple,
+            strokeWidth: 1.6,
           ),
-          _DmTile(
-            initial: 'S',
-            name: 'sam.dev',
-            preview: 'lmk when you push the fix',
-            time: 'yesterday',
-            unread: 0,
-            online: false,
+        ),
+        error: (_, __) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  color: Color(0xFF6E6E73), size: 30),
+              const SizedBox(height: 8),
+              Text(
+                'Could not load your friends.',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF9A9AA2),
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-          _DmTile(
-            initial: 'M',
-            name: 'maya_ui',
-            preview: 'the design looks clean',
-            time: 'Mon',
-            unread: 0,
-            online: true,
-          ),
-          _DmTile(
-            initial: 'J',
-            name: 'jk_42',
-            preview: 'got it, thanks',
-            time: 'Sun',
-            unread: 0,
-            online: false,
-          ),
-        ],
+        ),
+        data: (friends) {
+          if (friends.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.forum_outlined,
+                      color: Color(0xFF3C3C42), size: 44),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No friends yet',
+                    style: GoogleFonts.bebasNeue(
+                      color: const Color(0xFF5E5E66),
+                      fontSize: 24,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Send friend requests to start messaging.',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF6E6E75),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: friends.length,
+            itemBuilder: (context, i) {
+              final friend = friends[i];
+              return _DmTile(
+                user: friend,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DmThreadPage(friend: friend),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -81,25 +123,24 @@ class DmPage extends StatelessWidget {
 
 class _DmTile extends StatelessWidget {
   const _DmTile({
-    required this.initial,
-    required this.name,
-    required this.preview,
-    required this.time,
-    required this.unread,
-    required this.online,
+    required this.user,
+    required this.onTap,
   });
 
-  final String initial;
-  final String name;
-  final String preview;
-  final String time;
-  final int unread;
-  final bool online;
+  final UserEntity user;
+  final VoidCallback onTap;
+
+  String _displayName() {
+    final display = user.displayName.trim();
+    if (display.isNotEmpty) return display;
+    return user.userName;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final displayName = _displayName();
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
@@ -115,7 +156,7 @@ class _DmTile extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    initial,
+                    displayName.substring(0, 1).toUpperCase(),
                     style: GoogleFonts.bebasNeue(
                       color: const Color(0xFF888888),
                       fontSize: 20,
@@ -130,8 +171,9 @@ class _DmTile extends StatelessWidget {
                     height: 11,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                          online ? AppColors.online : const Color(0xFF555555),
+                      color: user.isOnline
+                          ? AppColors.online
+                          : const Color(0xFF555555),
                       border:
                           Border.all(color: const Color(0xFF0A0A0A), width: 2),
                     ),
@@ -148,63 +190,50 @@ class _DmTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        name,
+                        displayName,
                         style: GoogleFonts.inter(
-                          color: unread > 0
-                              ? AppColors.textPrimary
-                              : const Color(0xFFAAAAAA),
-                          fontWeight:
-                              unread > 0 ? FontWeight.w700 : FontWeight.w500,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
                       ),
-                      Text(
-                        time,
-                        style: GoogleFonts.spaceMono(
-                          color: const Color(0xFF555555),
-                          fontSize: 10,
-                        ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final previewAsync =
+                              ref.watch(dmPreviewProvider(user.id));
+                          final preview = previewAsync.valueOrNull;
+                          final label = preview == null
+                              ? ''
+                              : _timeAgo(preview.timestamp);
+                          return Text(
+                            label,
+                            style: GoogleFonts.spaceMono(
+                              color: const Color(0xFF555555),
+                              fontSize: 10,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          preview,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            color: unread > 0
-                                ? const Color(0xFFCCCCCC)
-                                : const Color(0xFF555555),
-                            fontSize: 12,
-                            fontWeight:
-                                unread > 0 ? FontWeight.w500 : FontWeight.w400,
-                          ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final previewAsync =
+                          ref.watch(dmPreviewProvider(user.id));
+                      final text = previewAsync.valueOrNull?.text ??
+                          'Tap to start messaging';
+                      return Text(
+                        text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF77777E),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
                         ),
-                      ),
-                      if (unread > 0) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.blurple,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$unread',
-                            style: GoogleFonts.spaceMono(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -214,5 +243,14 @@ class _DmTile extends StatelessWidget {
       ),
     );
   }
+
+  String _timeAgo(DateTime ts) {
+    final now = DateTime.now();
+    final diff = now.difference(ts.toLocal());
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m';
+    if (diff.inDays < 1) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    return '${ts.month}/${ts.day}';
+  }
 }
-//save my soul

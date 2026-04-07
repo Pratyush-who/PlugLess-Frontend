@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/current_user_provider.dart';
+import '../../../dm/presentation/pages/dm_thread_page.dart';
 import '../providers/public_profile_provider.dart';
 import 'public_profile_atoms.dart';
 
@@ -58,6 +59,17 @@ class PublicProfileBody extends ConsumerWidget {
           );
         }
       }
+    }
+
+    void openDm() {
+      if (!button.enabled) return;
+      final rootNavigator = Navigator.of(context, rootNavigator: true);
+      rootNavigator.pop();
+      rootNavigator.push(
+        MaterialPageRoute(
+          builder: (_) => DmThreadPage(friend: user),
+        ),
+      );
     }
 
     return Padding(
@@ -155,7 +167,11 @@ class PublicProfileBody extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: button.enabled ? sendFriendRequest : null,
+              onPressed: button.enabled
+                  ? (button.action == _ProfilePrimaryAction.message
+                      ? openDm
+                      : sendFriendRequest)
+                  : null,
               child: Text(
                 button.label,
                 style: GoogleFonts.inter(
@@ -177,32 +193,51 @@ class PublicProfileBody extends ConsumerWidget {
     required bool sentThisSession,
   }) {
     if (pending) {
-      return const _FriendButtonConfig(enabled: false, label: 'Sending...');
+      return const _FriendButtonConfig(
+        enabled: false,
+        label: 'Sending...',
+        action: _ProfilePrimaryAction.friendRequest,
+      );
     }
     if (me == null) {
-      return const _FriendButtonConfig(enabled: false, label: 'Loading...');
+      return const _FriendButtonConfig(
+        enabled: false,
+        label: 'Loading...',
+        action: _ProfilePrimaryAction.friendRequest,
+      );
     }
     if (me.id == target.id) {
-      return const _FriendButtonConfig(enabled: false, label: 'This is you');
+      return const _FriendButtonConfig(
+        enabled: false,
+        label: 'This is you',
+        action: _ProfilePrimaryAction.friendRequest,
+      );
     }
     if (me.friendIds.contains(target.id)) {
       return const _FriendButtonConfig(
-        enabled: false,
-        label: 'Already friends',
+        enabled: true,
+        label: 'Message',
+        action: _ProfilePrimaryAction.message,
       );
     }
     if (me.friendRequestIds.contains(target.id)) {
       return const _FriendButtonConfig(
         enabled: false,
         label: 'Request received',
+        action: _ProfilePrimaryAction.friendRequest,
       );
     }
     if (target.friendRequestIds.contains(me.id) || sentThisSession) {
-      return const _FriendButtonConfig(enabled: false, label: 'Request sent');
+      return const _FriendButtonConfig(
+        enabled: false,
+        label: 'Request sent',
+        action: _ProfilePrimaryAction.friendRequest,
+      );
     }
     return const _FriendButtonConfig(
       enabled: true,
       label: 'Send Friend Request',
+      action: _ProfilePrimaryAction.friendRequest,
     );
   }
 
@@ -216,8 +251,18 @@ class PublicProfileBody extends ConsumerWidget {
 }
 
 class _FriendButtonConfig {
-  const _FriendButtonConfig({required this.enabled, required this.label});
+  const _FriendButtonConfig({
+    required this.enabled,
+    required this.label,
+    required this.action,
+  });
 
   final bool enabled;
   final String label;
+  final _ProfilePrimaryAction action;
+}
+
+enum _ProfilePrimaryAction {
+  message,
+  friendRequest,
 }
