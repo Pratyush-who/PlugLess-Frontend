@@ -89,31 +89,45 @@ class _DmThreadPageState extends ConsumerState<DmThreadPage> {
         backgroundColor: const Color(0xFF0A0A0A),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0),
+          child: Container(height: 1, color: const Color(0xFF1A1A1A)),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: Color(0xFF888888),
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         titleSpacing: 0,
         title: Row(
           children: [
+            const Icon(Icons.chat_bubble_outline_rounded,
+                color: AppColors.textMuted, size: 17),
+            const SizedBox(width: 8),
             CircleAvatar(
-              radius: 14,
+              radius: 13,
               backgroundColor: const Color(0xFF1D1D1D),
               child: Text(
                 _displayName(widget.friend).substring(0, 1).toUpperCase(),
                 style: GoogleFonts.bebasNeue(
                   color: const Color(0xFFAAAAAA),
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Text(
-              _displayName(widget.friend),
-              style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _displayName(widget.friend),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -161,15 +175,44 @@ class _DmThreadPageState extends ConsumerState<DmThreadPage> {
 
     if (state.messages.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Start your conversation with ${_displayName(widget.friend)}',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF6D6D70),
-              fontSize: 13,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.forum_outlined,
+                color: Color(0xFF2F2F33), size: 42),
+            const SizedBox(height: 12),
+            Text(
+              'No messages yet',
+              style: GoogleFonts.bebasNeue(
+                color: const Color(0xFF54545A),
+                fontSize: 24,
+              ),
             ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Start your conversation with ${_displayName(widget.friend)}',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF6D6D70),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget buildLoadingMore() {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 8),
+        child: Center(
+          child: SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 1.5),
           ),
         ),
       );
@@ -185,20 +228,11 @@ class _DmThreadPageState extends ConsumerState<DmThreadPage> {
       },
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         itemCount: state.messages.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (state.isLoadingMore && index == 0) {
-            return const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Center(
-                child: SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 1.5),
-                ),
-              ),
-            );
+            return buildLoadingMore();
           }
 
           final message =
@@ -237,7 +271,14 @@ class _DmBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final bubbleColor = message.isDeleted
         ? const Color(0xFF1B1B1E)
-        : (isMine ? const Color(0xFF2C6DFE) : const Color(0xFF1C1C1F));
+        : (isMine ? const Color(0xFF2C6DFE) : const Color(0xFF1A1A1A));
+
+    final borderRadius = BorderRadius.only(
+      topLeft: const Radius.circular(12),
+      topRight: const Radius.circular(12),
+      bottomLeft: Radius.circular(isMine ? 12 : 4),
+      bottomRight: Radius.circular(isMine ? 4 : 12),
+    );
 
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
@@ -250,8 +291,8 @@ class _DmBubble extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: bubbleColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF2A2A2D)),
+                borderRadius: borderRadius,
+                border: Border.all(color: const Color(0xFF252525)),
               ),
               child: Padding(
                 padding:
@@ -278,7 +319,9 @@ class _DmBubble extends StatelessWidget {
                     Text(
                       _timeLabel(message.timestamp, pending: message.isPending),
                       style: GoogleFonts.spaceMono(
-                        color: const Color(0xFFD6D6D8),
+                        color: isMine
+                            ? const Color(0xFFE8EEFF)
+                            : const Color(0xFF9A9AA2),
                         fontSize: 9,
                       ),
                     ),
@@ -318,15 +361,16 @@ class _DmInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFF0A0A0A),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF252525)),
         ),
         child: Row(
           children: [
+            const SizedBox(width: 6),
             Expanded(
               child: TextField(
                 controller: controller,
@@ -334,29 +378,32 @@ class _DmInput extends StatelessWidget {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
                 style: GoogleFonts.inter(
-                  color: const Color(0xFFF3F3F4),
-                  fontSize: 14.5,
+                  color: enabled
+                      ? const Color(0xFFDCDDDE)
+                      : const Color(0xFF77777E),
+                  fontSize: 15,
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                  hintText: enabled ? 'Write a message' : 'Reconnecting...',
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  hintText: enabled ? 'Write a message' : 'Connecting...',
                   hintStyle: GoogleFonts.inter(
-                    color: const Color(0xFF707076),
-                    fontSize: 14,
+                    color: const Color(0xFF4A4A4A),
+                    fontSize: 15,
                   ),
                 ),
               ),
             ),
-            IconButton(
-              onPressed: isSending || !enabled ? null : onSend,
-              icon: AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
-                opacity: isSending ? 0.45 : 1,
-                child: const Icon(Icons.send_rounded, size: 18),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 150),
+              opacity: isSending ? 0.45 : 1,
+              child: IconButton(
+                onPressed: isSending || !enabled ? null : onSend,
+                icon: const Icon(Icons.send_rounded, size: 18),
+                color: const Color(0xFFCCCCCC),
               ),
-              color: Colors.white,
             ),
           ],
         ),
@@ -370,15 +417,40 @@ class _ReconnectBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 30,
-      color: const Color(0xFF131315),
-      alignment: Alignment.center,
-      child: Text(
-        'Reconnecting...',
-        style: GoogleFonts.spaceMono(
-          color: const Color(0xFF8D8D95),
-          fontSize: 10,
+    return ShaderMask(
+      shaderCallback: (bounds) => LinearGradient(
+        colors: const [
+          Color(0xFF0A0A0A),
+          Colors.white,
+          Colors.white,
+          Color(0xFF0A0A0A),
+        ],
+        stops: const [0.0, 0.18, 0.82, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: Container(
+        height: 32,
+        color: const Color(0xFF0A0A0A),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 11,
+              height: 11,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: const Color(0xFF555555),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Connecting...',
+              style: GoogleFonts.spaceMono(
+                color: const Color(0xFF555555),
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
       ),
     );
