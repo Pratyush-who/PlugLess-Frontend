@@ -103,21 +103,18 @@ class _DmThreadPageState extends ConsumerState<DmThreadPage> {
         titleSpacing: 0,
         title: Row(
           children: [
-            const Icon(Icons.chat_bubble_outline_rounded,
-                color: AppColors.textMuted, size: 17),
-            const SizedBox(width: 8),
             CircleAvatar(
-              radius: 13,
+              radius: 15,
               backgroundColor: const Color(0xFF1D1D1D),
               child: Text(
                 _displayName(widget.friend).substring(0, 1).toUpperCase(),
                 style: GoogleFonts.bebasNeue(
                   color: const Color(0xFFAAAAAA),
-                  fontSize: 13,
+                  fontSize: 15,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 _displayName(widget.friend),
@@ -126,20 +123,8 @@ class _DmThreadPageState extends ConsumerState<DmThreadPage> {
                 style: GoogleFonts.inter(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
-                  fontSize: 15,
+                  fontSize: 17,
                 ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: state.isConnected
-                    ? AppColors.online
-                    : const Color(0xFF5A5A5A),
-                shape: BoxShape.circle,
               ),
             ),
           ],
@@ -274,10 +259,10 @@ class _DmBubble extends StatelessWidget {
         : (isMine ? const Color(0xFF2C6DFE) : const Color(0xFF1A1A1A));
 
     final borderRadius = BorderRadius.only(
-      topLeft: const Radius.circular(12),
-      topRight: const Radius.circular(12),
-      bottomLeft: Radius.circular(isMine ? 12 : 4),
-      bottomRight: Radius.circular(isMine ? 4 : 12),
+      topLeft: const Radius.circular(20),
+      topRight: const Radius.circular(20),
+      bottomLeft: Radius.circular(isMine ? 20 : 16),
+      bottomRight: Radius.circular(isMine ? 20 : 16),
     );
 
     return Align(
@@ -287,7 +272,7 @@ class _DmBubble extends StatelessWidget {
         child: GestureDetector(
           onLongPress: onLongPress,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 280),
+            constraints: const BoxConstraints(maxWidth: 300),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: bubbleColor,
@@ -296,7 +281,7 @@ class _DmBubble extends StatelessWidget {
               ),
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -305,13 +290,11 @@ class _DmBubble extends StatelessWidget {
                           ? 'This message was deleted'
                           : message.content,
                       style: GoogleFonts.inter(
-                        color: message.isDeleted
-                            ? const Color(0xFF9A9AA2)
-                            : Colors.white,
+                        color: Colors.white,
                         fontStyle: message.isDeleted
                             ? FontStyle.italic
                             : FontStyle.normal,
-                        fontSize: 13.5,
+                        fontSize: 14.5,
                         height: 1.35,
                       ),
                     ),

@@ -60,14 +60,59 @@ class DmMessage {
   }
 
   factory DmMessage.fromJson(Map<String, dynamic> json) {
+    String pickString(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value == null) continue;
+        final text = value.toString().trim();
+        if (text.isNotEmpty && text.toLowerCase() != 'null') return text;
+      }
+      return '';
+    }
+
+    DateTime pickTimestamp() {
+      final raw = json['timestamp'] ?? json['createdAt'] ?? json['sentAt'];
+      if (raw is int) {
+        final millis = raw > 9999999999 ? raw : raw * 1000;
+        return DateTime.fromMillisecondsSinceEpoch(millis);
+      }
+      final asString = raw?.toString() ?? '';
+      if (asString.isNotEmpty) {
+        final asInt = int.tryParse(asString);
+        if (asInt != null) {
+          final millis = asInt > 9999999999 ? asInt : asInt * 1000;
+          return DateTime.fromMillisecondsSinceEpoch(millis);
+        }
+      }
+      return DateTime.tryParse(asString) ?? DateTime.now();
+    }
+
+    bool pickDeleted() {
+      final raw = json['isDeleted'] ?? json['deleted'] ?? false;
+      if (raw is bool) return raw;
+      if (raw is num) return raw != 0;
+      final text = raw.toString().toLowerCase();
+      return text == 'true' || text == '1';
+    }
+
     return DmMessage(
-      id: (json['id'] ?? '').toString(),
-      senderId: (json['senderId'] ?? '').toString(),
-      recipientId: (json['recipientId'] ?? '').toString(),
-      content: (json['content'] ?? '').toString(),
-      timestamp: DateTime.tryParse((json['timestamp'] ?? '').toString()) ??
-          DateTime.now(),
-      isDeleted: (json['isDeleted'] ?? false) == true,
+      id: pickString(['id', 'messageId']),
+      senderId: pickString([
+        'senderId',
+        'senderUserId',
+        'fromUserId',
+        'sender_id',
+      ]),
+      recipientId: pickString([
+        'recipientId',
+        'recipientUserId',
+        'receiverId',
+        'toUserId',
+        'recipient_id',
+      ]),
+      content: pickString(['content', 'message', 'text']),
+      timestamp: pickTimestamp(),
+      isDeleted: pickDeleted(),
     );
   }
 }
@@ -355,11 +400,6 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
         if (decoded is! Map<String, dynamic>) return;
 
         final incoming = DmMessage.fromJson(decoded);
-        if (!incoming.belongsToThread(meId: meId, friendId: friend.id)) {
-          return;
-        }
-
-        if (state.messages.any((m) => m.id == incoming.id)) return;
 
         final pendingIndex = state.messages.indexWhere(
           (m) =>
@@ -367,17 +407,41 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
               m.senderId == meId &&
               m.recipientId == friend.id &&
               m.content == incoming.content &&
-              incoming.timestamp.difference(m.timestamp).abs().inSeconds <= 30,
+              incoming.timestamp.difference(m.timestamp).abs().inSeconds <= 60,
         );
 
         if (pendingIndex >= 0) {
           final updated = [...state.messages];
-          updated[pendingIndex] = incoming.copyWith(isPending: false);
+          updated[pendingIndex] = incoming.copyWith(
+            id: incoming.id.isEmpty
+                ? updated[pendingIndex].id
+                : incoming.id,
+            senderId: incoming.senderId.isEmpty ? meId : incoming.senderId,
+            recipientId: incoming.recipientId.isEmpty
+                ? friend.id
+                : incoming.recipientId,
+            isPending: false,
+          );
           state = state.copyWith(messages: updated);
           return;
         }
 
-        state = state.copyWith(messages: [...state.messages, incoming]);
+        if (!incoming.belongsToThread(meId: meId, friendId: friend.id)) {
+          return;
+        }
+
+        if (incoming.id.isNotEmpty &&
+            state.messages.any((m) => m.id == incoming.id)) {
+          return;
+        }
+
+        final appendable = incoming.id.isEmpty
+            ? incoming.copyWith(
+                id: 'srv-${incoming.timestamp.microsecondsSinceEpoch}',
+              )
+            : incoming;
+
+        state = state.copyWith(messages: [...state.messages, appendable]);
       },
     );
 
@@ -428,13 +492,13 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     Response<dynamic> response;
     try {
       response = await ApiClient.instance.dio.get(
-        Endpoints.dmHistory(friendId),
+        Endpoints.dmHistoryFallback(friendId),
         queryParameters: {'page': page, 'size': size},
       );
     } on DioException catch (e) {
       if (e.response?.statusCode != 404) rethrow;
       response = await ApiClient.instance.dio.get(
-        Endpoints.dmHistoryFallback(friendId),
+        Endpoints.dmHistory(friendId),
         queryParameters: {'page': page, 'size': size},
       );
     }
@@ -501,7 +565,7 @@ final dmPreviewProvider = FutureProvider.autoDispose
     .family<DmPreview?, String>((ref, friendId) async {
   try {
     final response = await ApiClient.instance.dio.get(
-      Endpoints.dmHistory(friendId),
+      Endpoints.dmHistoryFallback(friendId),
       queryParameters: {'page': 0, 'size': 1},
     );
     final data = response.data;
@@ -518,7 +582,7 @@ final dmPreviewProvider = FutureProvider.autoDispose
   } on DioException catch (e) {
     if (e.response?.statusCode != 404) return null;
     final fallback = await ApiClient.instance.dio.get(
-      Endpoints.dmHistoryFallback(friendId),
+      Endpoints.dmHistory(friendId),
       queryParameters: {'page': 0, 'size': 1},
     );
     final data = fallback.data;
