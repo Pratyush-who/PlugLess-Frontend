@@ -197,11 +197,14 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
   int _nextPage = 1;
 
   Future<void> _bootstrap() async {
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final me = await ref.read(currentUserProvider.future);
+      if (!mounted) return;
       _meId = me.id;
       final page = await _fetchHistory(friendId: friend.id, page: 0, size: 50);
+      if (!mounted) return;
       final sorted = [...page.messages]
         ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
       state = state.copyWith(
@@ -212,6 +215,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
       );
       _nextPage = 1;
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: 'Could not load message history.',
@@ -222,6 +226,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
   }
 
   Future<void> reload() async {
+    if (!mounted) return;
     _stompClient?.deactivate();
     _stompClient = null;
     _nextPage = 1;
@@ -236,6 +241,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     try {
       final page =
           await _fetchHistory(friendId: friend.id, page: _nextPage, size: 50);
+      if (!mounted) return;
       final older = page.messages
           .where((m) =>
               m.belongsToThread(meId: meId, friendId: friend.id) &&
@@ -250,6 +256,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
       );
       _nextPage += 1;
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoadingMore: false,
         error: 'Could not load older messages.',
@@ -258,6 +265,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
   }
 
   void clearLiveError() {
+    if (!mounted) return;
     state = state.copyWith(clearLiveError: true);
   }
 
@@ -291,12 +299,20 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     try {
       client.send(
         destination: Endpoints.stompDmSend,
-        body: jsonEncode({'recipientId': friend.id, 'content': trimmed}),
+        body: jsonEncode({
+          'recipientId': friend.id,
+          'recipientUserId': friend.id,
+          'receiverId': friend.id,
+          'content': trimmed,
+        }),
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(error: 'Failed to send message.');
     } finally {
-      state = state.copyWith(isSending: false);
+      if (mounted) {
+        state = state.copyWith(isSending: false);
+      }
     }
   }
 
@@ -336,6 +352,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
         body: jsonEncode({'messageId': messageId}),
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(error: 'Could not delete message.');
     }
   }
@@ -343,6 +360,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
   Future<void> _connectSocket() async {
     final token = await TokenService.instance.getToken();
     if (token == null || token.isEmpty) return;
+    if (!mounted) return;
 
     final wsUrl = _buildWsUrl(dotenv.env['BASE_URL'] ?? '', token);
 
@@ -355,10 +373,12 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
         stompConnectHeaders: {'Authorization': 'Bearer $token'},
         webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
         onConnect: (_) {
+          if (!mounted) return;
           state = state.copyWith(isConnected: true, clearError: true);
           _subscribeQueues();
         },
         onStompError: (frame) {
+          if (!mounted) return;
           final msg = (frame.headers['message'] ?? '').toLowerCase();
           if (msg.contains('401') ||
               msg.contains('unauthorized') ||
@@ -370,6 +390,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
               state.copyWith(isConnected: false, error: 'DM connection error.');
         },
         onWebSocketError: (error) {
+          if (!mounted) return;
           final errStr = error.toString().toLowerCase();
           if (errStr.contains('401') || errStr.contains('unauthorized')) {
             AuthStateService.instance.onUnauthorized();
@@ -380,10 +401,14 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
             error: 'Disconnected. Reconnecting...',
           );
         },
-        onDisconnect: (_) => state = state.copyWith(isConnected: false),
+        onDisconnect: (_) {
+          if (!mounted) return;
+          state = state.copyWith(isConnected: false);
+        },
       ),
     );
 
+    if (!mounted) return;
     _stompClient = client;
     client.activate();
   }
@@ -392,6 +417,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     _stompClient?.subscribe(
       destination: Endpoints.stompDmMessagesQueue,
       callback: (frame) {
+        if (!mounted) return;
         final body = frame.body;
         final meId = _meId;
         if (body == null || body.isEmpty || meId == null) return;
@@ -411,15 +437,13 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
         );
 
         if (pendingIndex >= 0) {
+          if (!mounted) return;
           final updated = [...state.messages];
           updated[pendingIndex] = incoming.copyWith(
-            id: incoming.id.isEmpty
-                ? updated[pendingIndex].id
-                : incoming.id,
+            id: incoming.id.isEmpty ? updated[pendingIndex].id : incoming.id,
             senderId: incoming.senderId.isEmpty ? meId : incoming.senderId,
-            recipientId: incoming.recipientId.isEmpty
-                ? friend.id
-                : incoming.recipientId,
+            recipientId:
+                incoming.recipientId.isEmpty ? friend.id : incoming.recipientId,
             isPending: false,
           );
           state = state.copyWith(messages: updated);
@@ -441,6 +465,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
               )
             : incoming;
 
+        if (!mounted) return;
         state = state.copyWith(messages: [...state.messages, appendable]);
       },
     );
@@ -448,6 +473,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     _stompClient?.subscribe(
       destination: Endpoints.stompDmUpdatesQueue,
       callback: (frame) {
+        if (!mounted) return;
         final body = frame.body;
         if (body == null || body.isEmpty) return;
 
@@ -477,6 +503,7 @@ class DmThreadNotifier extends StateNotifier<DmThreadState> {
     _stompClient?.subscribe(
       destination: Endpoints.stompUserErrors,
       callback: (frame) {
+        if (!mounted) return;
         final body = frame.body;
         if (body == null || body.isEmpty) return;
         state = state.copyWith(liveError: body);

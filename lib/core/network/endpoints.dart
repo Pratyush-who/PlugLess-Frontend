@@ -39,7 +39,7 @@ class Endpoints {
   static const String stompGlobalSend = '/app/chat.global';
   static const String stompGlobalTopic = '/topic/global';
   static const String stompUserErrors = '/user/queue/errors';
-  static const String stompDmSend = '/app/chat/dm/send';
+  static const String stompDmSend = '/app/chat.dm.send';
   static const String stompDmDelete = '/app/chat/dm/delete';
   static const String stompDmMessagesQueue = '/user/queue/messages';
   static const String stompDmUpdatesQueue = '/user/queue/message-updates';

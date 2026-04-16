@@ -68,6 +68,7 @@ class GlobalChatState {
   final bool isConnected;
   final bool isSending;
   final String? error;
+
   /// Set when the backend rejects a message (blocked word, etc.).
   /// Cleared immediately after the UI shows it.
   final String? moderationError;
@@ -104,10 +105,13 @@ const _kCachedHistory = 'cached_global_history';
 class GlobalChatNotifier extends Notifier<GlobalChatState> {
   StompClient? _stompClient;
   bool _isBootstrapping = false;
+  bool _isDisposed = false;
 
   @override
   GlobalChatState build() {
+    _isDisposed = false;
     ref.onDispose(() {
+      _isDisposed = true;
       _stompClient?.deactivate();
       _stompClient = null;
     });
@@ -116,12 +120,14 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
   }
 
   void clearModerationError() {
+    if (_isDisposed) return;
     state = state.copyWith(clearModerationError: true);
   }
 
   /// Cleanly disconnects the WebSocket without attempting to reconnect.
   /// Call this on logout — bypasses the _isBootstrapping guard.
   void disconnect() {
+    _isDisposed = true;
     _isBootstrapping = false;
     _stompClient?.deactivate();
     _stompClient = null;
@@ -137,11 +143,13 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
   }
 
   Future<void> _bootstrap() async {
+    if (_isDisposed) return;
     _isBootstrapping = true;
     // Load history: network first, cache fallback — never blocks showing content
     await _loadHistory();
     // Connect socket: best-effort, failures shown as banner but don't clear messages
     _connectSocket().catchError((_) {
+      if (_isDisposed) return;
       state = state.copyWith(isConnected: false);
     });
     _isBootstrapping = false;
@@ -193,11 +201,13 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
 
   Future<void> _connectSocket() async {
     final token = await TokenService.instance.getToken();
+    if (_isDisposed) return;
     if (token == null || token.isEmpty) throw StateError('No auth token');
 
     final wsUrl = _buildWsUrl(dotenv.env['BASE_URL'] ?? '', token);
 
-    final client = StompClient(
+    late final StompClient client;
+    client = StompClient(
       config: StompConfig(
         url: wsUrl,
         reconnectDelay: const Duration(seconds: 5),
@@ -206,38 +216,51 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
         stompConnectHeaders: {'Authorization': 'Bearer $token'},
         webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
         onConnect: (_) {
+          if (_isDisposed) return;
+          if (!client.connected) return;
           state = state.copyWith(isConnected: true, clearError: true);
-          // Global chat messages
-          _stompClient?.subscribe(
-            destination: Endpoints.stompGlobalTopic,
-            callback: (frame) {
-              final body = frame.body;
-              if (body == null || body.isEmpty) return;
-              final decoded = jsonDecode(body);
-              if (decoded is! Map<String, dynamic>) return;
-              final msg = ChatMessage.fromJson(decoded);
-              if (!state.messages.any((m) => m.id == msg.id)) {
-                state = state.copyWith(messages: [...state.messages, msg]);
-              }
-            },
-          );
-          // Sender-only moderation/error feedback from backend
-          _stompClient?.subscribe(
-            destination: Endpoints.stompUserErrors,
-            callback: (frame) {
-              final body = frame.body;
-              if (body == null || body.isEmpty) return;
-              try {
-                final map = jsonDecode(body) as Map<String, dynamic>;
-                final msg = (map['message'] as String?) ?? 'Message blocked.';
-                state = state.copyWith(moderationError: msg);
-              } catch (_) {
-                state = state.copyWith(moderationError: 'Message blocked.');
-              }
-            },
-          );
+          try {
+            // Global chat messages
+            client.subscribe(
+              destination: Endpoints.stompGlobalTopic,
+              callback: (frame) {
+                if (_isDisposed) return;
+                final body = frame.body;
+                if (body == null || body.isEmpty) return;
+                final decoded = jsonDecode(body);
+                if (decoded is! Map<String, dynamic>) return;
+                final msg = ChatMessage.fromJson(decoded);
+                if (!state.messages.any((m) => m.id == msg.id)) {
+                  state = state.copyWith(messages: [...state.messages, msg]);
+                }
+              },
+            );
+            // Sender-only moderation/error feedback from backend
+            client.subscribe(
+              destination: Endpoints.stompUserErrors,
+              callback: (frame) {
+                if (_isDisposed) return;
+                final body = frame.body;
+                if (body == null || body.isEmpty) return;
+                try {
+                  final map = jsonDecode(body) as Map<String, dynamic>;
+                  final msg = (map['message'] as String?) ?? 'Message blocked.';
+                  state = state.copyWith(moderationError: msg);
+                } catch (_) {
+                  state = state.copyWith(moderationError: 'Message blocked.');
+                }
+              },
+            );
+          } on StompBadStateException {
+            if (_isDisposed) return;
+            state = state.copyWith(
+              isConnected: false,
+              error: 'WebSocket disconnected. Reconnecting...',
+            );
+          }
         },
         onStompError: (frame) {
+          if (_isDisposed) return;
           final msg = (frame.headers['message'] ?? '').toLowerCase();
           if (msg.contains('401') ||
               msg.contains('unauthorized') ||
@@ -249,6 +272,7 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
               state.copyWith(isConnected: false, error: 'Connection error.');
         },
         onWebSocketError: (error) {
+          if (_isDisposed) return;
           final errStr = error.toString().toLowerCase();
           if (errStr.contains('401') || errStr.contains('unauthorized')) {
             AuthStateService.instance.onUnauthorized();
@@ -257,9 +281,13 @@ class GlobalChatNotifier extends Notifier<GlobalChatState> {
           state = state.copyWith(
               isConnected: false, error: 'WebSocket disconnected.');
         },
-        onDisconnect: (_) => state = state.copyWith(isConnected: false),
+        onDisconnect: (_) {
+          if (_isDisposed) return;
+          state = state.copyWith(isConnected: false);
+        },
       ),
     );
+    if (_isDisposed) return;
     _stompClient = client;
     client.activate();
   }
