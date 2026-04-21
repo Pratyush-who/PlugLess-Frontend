@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:battery_plus/battery_plus.dart';
-import 'package:device_apps/device_apps.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:installed_apps/app_info.dart';
+import 'package:installed_apps/installed_apps.dart';
 
 import '../../../auth/presentation/widgets/auth_dot_grid.dart';
 import '../../../../../core/widgets/plugless_logo.dart';
@@ -102,13 +104,13 @@ class _BatteryGatePageState extends State<BatteryGatePage> {
     if (!isAndroid) return const [];
 
     try {
-      final apps = await DeviceApps.getInstalledApplications(
-        includeAppIcons: true,
-        includeSystemApps: false,
-        onlyAppsWithLaunchIntent: true,
+      final apps = await InstalledApps.getInstalledApps(
+        excludeSystemApps: true,
+        excludeNonLaunchableApps: true,
+        withIcon: true,
       );
 
-      final appMap = <String, Application>{
+      final appMap = <String, AppInfo>{
         for (final app in apps) app.packageName: app,
       };
 
@@ -117,15 +119,10 @@ class _BatteryGatePageState extends State<BatteryGatePage> {
         final app = appMap[target.packageName];
         if (app == null) continue;
 
-        Uint8List? icon;
-        if (app is ApplicationWithIcon) {
-          icon = app.icon;
-        }
-
         result.add(
           _InstalledDrainApp(
             spec: target,
-            iconBytes: icon,
+            iconBytes: app.icon,
           ),
         );
       }
@@ -144,8 +141,14 @@ class _BatteryGatePageState extends State<BatteryGatePage> {
 
   Future<void> _openApp(String packageName) async {
     try {
-      await DeviceApps.openApp(packageName);
+      await InstalledApps.startApp(packageName);
     } catch (_) {}
+  }
+
+  Future<void> _onHiddenSkipLongPress() async {
+    await HapticFeedback.mediumImpact();
+    if (!mounted) return;
+    await _continueToApp();
   }
 
   @override
@@ -173,14 +176,51 @@ class _BatteryGatePageState extends State<BatteryGatePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const PluglessLogo(size: 24),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Meet Your People.',
-                    style: GoogleFonts.spaceMono(
-                      color: const Color(0xFF7A7A7A),
-                      fontSize: 10,
-                      letterSpacing: 1,
+                  SizedBox(
+                    height: 64,
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'PLUGLESS',
+                                style: GoogleFonts.bungee(
+                                  color: const Color(0xFFEDEDED),
+                                  fontSize: 24,
+                                  letterSpacing: 1.2,
+                                  height: 0.95,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Meet Your People.',
+                                style: GoogleFonts.spaceMono(
+                                  color: const Color(0xFF7A7A7A),
+                                  fontSize: 10,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: GestureDetector(
+                            onLongPress: _onHiddenSkipLongPress,
+                            behavior: HitTestBehavior.opaque,
+                            child: Opacity(
+                              opacity: 0.35,
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: PluglessLogo(size: 8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),

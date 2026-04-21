@@ -44,7 +44,7 @@ dependencies:
 
   # Device state
   battery_plus: ^6.2.2
-  device_apps: ^2.2.0
+  installed_apps: ^2.1.1
 
 dev_dependencies:
   flutter_test:

@@ -84,7 +84,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2800));
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
 
     var batteryLevel = 100;
@@ -99,7 +99,6 @@ class _SplashPageState extends ConsumerState<SplashPage>
       context.go(AppRoutes.batteryGate);
       return;
     }
-
     await _continueToApp();
   }
 
