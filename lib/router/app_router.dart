@@ -6,6 +6,7 @@ import '../core/auth/token_service.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
+import '../features/battery_gate/presentation/pages/battery_gate_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/friends/presentation/pages/friends_page.dart';
@@ -37,6 +38,10 @@ class AppRouter {
         pageBuilder: (_, state) => _fadePage(state, const OnboardingPage()),
       ),
       GoRoute(
+        path: AppRoutes.batteryGate,
+        pageBuilder: (_, state) => _fadePage(state, const BatteryGatePage()),
+      ),
+      GoRoute(
         path: AppRoutes.home,
         pageBuilder: (_, state) => _fadePage(state, const HomePage()),
         routes: [
@@ -61,8 +66,9 @@ class AppRouter {
     final loc = state.matchedLocation;
     final isOnAuth = loc == AppRoutes.login || loc == AppRoutes.signup;
     final isOnOnboarding = loc == AppRoutes.onboarding;
+    final isOnBatteryGate = loc == AppRoutes.batteryGate;
 
-    if (!isLoggedIn && !isOnAuth && !isOnOnboarding) {
+    if (!isLoggedIn && !isOnAuth && !isOnOnboarding && !isOnBatteryGate) {
       return AppRoutes.login;
     }
     if (isLoggedIn && isOnAuth) {

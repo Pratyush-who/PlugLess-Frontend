@@ -5,6 +5,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String onboarding = '/onboarding';
+  static const String batteryGate = '/battery-gate';
   static const String home = '/home';
 
   // Sub-routes under home (for deep linking)

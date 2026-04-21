@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:battery_plus/battery_plus.dart';
 
 import '../../../../core/auth/token_service.dart';
 import '../../../../router/app_routes.dart';
@@ -85,6 +86,24 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2800));
     if (!mounted) return;
+
+    var batteryLevel = 100;
+    try {
+      batteryLevel = await Battery().batteryLevel;
+    } catch (_) {
+      batteryLevel = 100;
+    }
+
+    if (!mounted) return;
+    if (batteryLevel > 20) {
+      context.go(AppRoutes.batteryGate);
+      return;
+    }
+
+    await _continueToApp();
+  }
+
+  Future<void> _continueToApp() async {
     final token = await TokenService.instance.getToken();
     if (!mounted) return;
     context.go(token != null ? AppRoutes.home : AppRoutes.login);
